@@ -44,7 +44,7 @@ class _AddReceipe extends State<AddReceipe>{
               children: [
                 IconButton(
                   onPressed: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const BottomNavbar(currentIndex: 4,)));
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const BottomNavbar(currentIndex: 3,)));
                   },
                   icon: Image.asset('assets/images/close.png', width: 22.85, height: 22.85,),
                 ),

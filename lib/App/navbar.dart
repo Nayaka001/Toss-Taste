@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:jualan/App/Profile/profile.dart';
+import 'package:jualan/App/Toss/main.dart';
 import 'package:jualan/App/detail.dart';
 import 'package:jualan/App/favourites.dart';
 import 'package:jualan/App/home_screen.dart';
@@ -43,7 +44,6 @@ class _BottomNavbarState extends State<BottomNavbar>{
     HomeScreen(),
     FavouritesScreen(),
     SavedScreen(),
-    HomeScreen(),
     Profile(),
   ];
   @override
@@ -53,9 +53,7 @@ class _BottomNavbarState extends State<BottomNavbar>{
         height: 80,
         width: 80,
         child: FloatingActionButton(onPressed: () {
-          setState(() {
-            currentIndex = 2;
-          });
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const TossTaste()));
         },
           shape: const CircleBorder(),
           backgroundColor: circle,
@@ -110,7 +108,7 @@ class _BottomNavbarState extends State<BottomNavbar>{
               IconButton(
                 onPressed: (){
                   setState(() {
-                    currentIndex = 3;
+                    currentIndex = 2;
                   });
                 },
                 icon: Image.asset('assets/images/save.png'),
@@ -120,7 +118,7 @@ class _BottomNavbarState extends State<BottomNavbar>{
               IconButton(
                 onPressed: (){
                   setState(() {
-                    currentIndex = 4;
+                    currentIndex = 3;
                   });
                 },
                 icon: Image.asset('assets/images/profile.png'),
