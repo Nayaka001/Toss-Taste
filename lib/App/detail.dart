@@ -86,100 +86,7 @@ class _DetailState extends State<Detail> {
                     width: 144,
                     height: 28,
                     child: ElevatedButton(onPressed: () {
-                      showModalBottomSheet(
-                          context: context,
-                          builder: (BuildContext context){
-                            return SingleChildScrollView(
-                              scrollDirection: Axis.vertical,
-                              child: Container(
-                                  decoration: BoxDecoration(
-                                      border: Border.all(width: 1, color: Colors.black),
-                                      color: Colors.white,
-                                      borderRadius: const BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30))
-                                  ),
-                                  padding: const EdgeInsets.only(top: 9.86, right: 14, left: 14),
-                                  width: MediaQuery.of(context).size.width,
-                                  height: 485,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          const SizedBox(width: 25.0,),
-                                          Container(
-                                            decoration: BoxDecoration(
-                                                border: Border.all(width: 1),
-                                                color: const Color(0XFFD9D9D9),
-                                                borderRadius: BorderRadius.circular(50)
-                                            ),
-                                            width: (79.2 / MediaQuery.of(context).size.width) * MediaQuery.of(context).size.width,
-                                            height: 8.55,
-                                          ),
-                                          GestureDetector(
-                                            onTap: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                            child: Image.asset('assets/images/closeprof.png'),
-                                          )
-
-                                        ],
-                                      ),
-                                      const SizedBox(height: 17.59,),
-                                      const Center(
-                                          child: Text('Ayam Bawang Betawi', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),)
-                                      ),
-                                      const SizedBox(height: 20.0,),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Container(
-                                            decoration: BoxDecoration(
-                                                border: Border.all(width: 1, color: Colors.black),
-                                                borderRadius: BorderRadius.circular(20)
-                                            ),
-                                            width: 100,
-                                            height: 100,
-                                            child: Image.asset('assets/images/ayamprof.png'),
-                                          ),
-                                          const SizedBox(width: 9,),
-                                          Container(
-                                            decoration: BoxDecoration(
-                                                border: Border.all(width: 1, color: Colors.black),
-                                                borderRadius: BorderRadius.circular(20)
-                                            ),
-                                            width: 100,
-                                            height: 100,
-                                            child: Image.asset('assets/images/ayamprof.png'),
-                                          ),
-                                        ],
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 39),
-                                        child: const Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            SizedBox(height: 15,),
-                                            Text('Bahan - Bahan'),
-                                            SizedBox(height: 8),
-                                            Text("• 1 ekor ayam kampung muda/ayam pejantan (potong kecil2)"),
-                                            Text("• 6 siung bawang putih (haluskan)"),
-                                            Text("• 1 ruas jahe (haluskan)"),
-                                            Text("• 2 bonggol bawang putih (geprek, jangan dikupas kulitnya)"),
-                                            Text("• 1 sdt kecap asin"),
-                                            Text("• 1 sdt saus tiram"),
-                                            Text("• Secukupnya garam"),
-                                          ],
-                                        ),
-                                      ),
-
-                                    ],
-                                  )
-                              ),
-                            );
-                          }
-                      );
+                      showModalFirst(context);
                     },
                         style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
@@ -311,4 +218,351 @@ class _DetailState extends State<Detail> {
       ),
     );
   }
+}
+
+void showModalFirst(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(30),
+    ),
+    isScrollControlled: true,
+    builder: (BuildContext context) {
+      return FractionallySizedBox(
+        heightFactor: 0.75,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
+            border: Border.all(color: Colors.black),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Drag Indicator
+                Center(
+                  child: Container(
+                    width: 120,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 5, 5, 5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Average Rating
+                Row(
+                  children: [
+                    const Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(
+                          Icons.star,
+                          size: 40,
+                          color: Colors.amber,
+                        ),
+                        Icon(
+                          Icons.star_outline,
+                          size: 40,
+                          color: Colors.black,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 10),
+                    RichText(
+                      text: const TextSpan(
+                        style: TextStyle(color: Colors.black),
+                        children: [
+                          TextSpan(
+                            text: '4.5',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 32,
+                            ),
+                          ),
+                          TextSpan(
+                            text: '/5',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                // List of Reviews (Scrollable)
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: List.generate(
+                        10, // jumlah ulasan
+                        (index) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Profile Picture
+                              Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle, // Bentuk bulat
+                                  border: Border.all(
+                                    color: Colors.black, // Warna border
+                                    width: 1, // Ketebalan border
+                                  ),
+                                ),
+                                child: CircleAvatar(
+                                  radius: 20,
+                                  backgroundColor: Colors.grey[300],
+                                  child: const Icon(
+                                    Icons.person,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(width: 10),
+                              // Review Content
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Amelia Panjaitan ${index + 1}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Row(
+                                      children: List.generate(
+                                        5,
+                                        (starIndex) => Padding(
+                                          padding: const EdgeInsets.only(right: 4.0),
+                                          child: Stack(
+                                            alignment: Alignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.star,
+                                                size: 25,
+                                                color: starIndex < 4
+                                                    ? Colors.amber
+                                                    : Colors.grey[300], 
+                                              ),
+                                              const Icon(
+                                                Icons.star_outline,
+                                                size: 25,
+                                                color: Colors.black, 
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    const Text(
+                                      'Aku coba buatin nenek aku, katanya enak banget. Masakannya enak, namun sepertinya lebih baik jika takaran garamnya dibanyakin.',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                    
+                                    // Rating Stars with Outline
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Input Field
+                TextField(
+                  onTap: () {
+                    Navigator.pop(context); // Tutup modal pertama
+                    showModalSecond(context); // Buka modal kedua
+                  },
+                  readOnly: true,
+                  decoration: InputDecoration(
+                    hintText: 'Left a review',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    suffixIcon: const Icon(Icons.edit),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+
+
+void showModalSecond(BuildContext context) { 
+  int selectedRating = 0; // Menyimpan rating yang dipilih
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true, // Agar modal bisa mengatur tinggi secara manual
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(30),
+        topRight: Radius.circular(30),
+      ),
+    ),
+    builder: (BuildContext context) {
+      // Menghitung tinggi 65% dari layar
+      double height = MediaQuery.of(context).size.height * 0.55;
+
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return Container(
+            height: height, // Mengatur tinggi modal menjadi 65% dari layar
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Drag Indicator
+                    Container(
+                      width: 120,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 5, 5, 5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Title Section
+                    const Text(
+                      'How Would You Rate',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Ayam Bawang',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Rating Section
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        5,
+                        (index) => GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedRating = index + 1; // Update rating
+                            });
+                          },
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Lapisan Outline (Selalu hitam)
+                              const Icon(
+                                Icons.star_border,
+                                color: Colors.black,
+                                size: 40,
+                              ),
+                              if (index < selectedRating)
+                                const Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                  size: 26, 
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Comment Section
+                    TextField(
+                      maxLines: 8,
+                      decoration: InputDecoration(
+                        hintText: 'Leave a review',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: const BorderSide(
+                            color: Colors.black, 
+                            width: 2.0,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: const BorderSide(
+                            color: Colors.black, 
+                            width: 1.0,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: const BorderSide(
+                            color: Colors.black,
+                            width: 1.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Submit Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // Handle submit action
+                          Navigator.pop(context); // Close modal
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFFBF69), 
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            side: const BorderSide(
+                              color: Colors.black, 
+                              width: 1.0, 
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 8), 
+                          minimumSize: Size(double.infinity, 30), 
+                        ),
+                        child: const Text(
+                          'SEND',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.black, 
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
 }
