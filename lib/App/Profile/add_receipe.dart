@@ -1,17 +1,15 @@
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:jualan/App/navbar.dart';
 
-class AddReceipe extends StatefulWidget{
+class AddReceipe extends StatefulWidget {
   const AddReceipe({super.key});
   @override
   State<AddReceipe> createState() => _AddReceipe();
-
 }
 
-class _AddReceipe extends State<AddReceipe>{
+class _AddReceipe extends State<AddReceipe> {
   Future<void> _pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
 
@@ -34,25 +32,35 @@ class _AddReceipe extends State<AddReceipe>{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFFDF7F1),
       body: Container(
         margin: const EdgeInsets.only(left: 15, right: 15, top: 41),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row (
+            Row(
               children: [
                 IconButton(
-                  onPressed: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const BottomNavbar(currentIndex: 3,)));
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const BottomNavbar(currentIndex: 3),
+                      ),
+                    );
                   },
-                  icon: Image.asset('assets/images/close.png', width: 22.85, height: 22.85,),
+                  icon: Image.asset(
+                    'assets/images/close.png',
+                    width: 22.85,
+                    height: 22.85,
+                  ),
                 ),
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.65,
                   child: const Center(
                     child: Text(
-                      'Add Receipe',
+                      'Add Recipe',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -62,13 +70,102 @@ class _AddReceipe extends State<AddReceipe>{
                 ),
               ],
             ),
-            const SizedBox(height: 33,),
-            const Text('Enter the title',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold,),
+            const SizedBox(height: 33),
+            const Text(
+              'Enter the title',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 5),
             Container(
-              height: 310,
+              height: 41,
               decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: Colors.black),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: TextField(
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 10.0),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Add ingredients',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 5),
+            Container(
+              width: 53,
+              height: 50,
+              decoration: BoxDecoration(
+                color: const Color(0xFFCBF3F0),
+                shape: BoxShape.rectangle,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.black),
+              ),
+              child: Icon(Icons.add, size: 28, weight: 900),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Add time estimation',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 5),
+            Container(
+              height: 41,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: Colors.black),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: TextField(
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 10.0),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Add serves amount',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 5),
+            Container(
+              height: 41,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: Colors.black),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: TextField(
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 10.0),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Add description',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 5),
+            Container(
+              height: 290,
+              decoration: BoxDecoration(
+                color: Colors.white,
                 border: Border.all(color: Colors.black), // Border luar
                 borderRadius: BorderRadius.circular(20.0),
               ),
@@ -81,7 +178,7 @@ class _AddReceipe extends State<AddReceipe>{
 
                     decoration: const InputDecoration(
                       hintText: 'Enter a description',
-                      hintStyle: TextStyle(color: Colors.black),
+                      hintStyle: TextStyle(color: Color.fromARGB(255, 104, 102, 102)),
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.only(left: 10.0, top: 9.0, right: 10.0),
                     ),
@@ -108,13 +205,13 @@ class _AddReceipe extends State<AddReceipe>{
                   children: [
                     Image.asset(
                       'assets/images/attach.png',
-                      width: 16,
-                      height: 16,
+                      width: 22,
+                      height: 22,
                     ),
                     const SizedBox(width: 5),
                     const Text(
                       'File Attach',
-                      style: TextStyle(fontSize: 12, color: Colors.black),
+                      style: TextStyle(fontSize: 16, color: Colors.black),
                     ),
                   ],
                 ),
