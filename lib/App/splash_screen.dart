@@ -49,7 +49,7 @@ class _SplashState extends State<Splash> {
           ),
           Image.asset('assets/images/logosp.png', width: 112),
           Image.asset(
-            'assets/images/botsp.png',
+              'assets/images/botsp.png',
             width: MediaQuery.of(context).size.width,
             fit: BoxFit.cover,
           ),
