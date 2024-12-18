@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jualan/App/login.dart';
 import 'package:jualan/App/navbar.dart';
-import 'api_service.dart';
+import 'models/api_service.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -11,33 +11,7 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController genderController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
-  final ApiService apiService = ApiService();
 
-  void registerUser() async {
-    final username = usernameController.text;
-    final gender = genderController.text;
-    final email = emailController.text;
-    final password = passwordController.text;
-    final confirmPassword = confirmPasswordController.text;
-
-    final result = await apiService.register(username, gender, email, password, confirmPassword);
-
-    if (result['success']) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message']), backgroundColor: Colors.green),
-      );
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const BottomNavbar(currentIndex: 0)));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message']), backgroundColor: Colors.red),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,17 +35,17 @@ class _RegisterState extends State<Register> {
                   ),
                 ),
                 const SizedBox(height: 38),
-                buildTextField('Name', usernameController, 'assets/images/nama.png'),
+
                 const SizedBox(height: 16),
-                buildTextField('Gender', genderController, 'assets/images/gender.png'),
+
                 const SizedBox(height: 16),
-                buildTextField('Email', emailController, 'assets/images/letter.png'),
+
                 const SizedBox(height: 16),
-                buildTextField('Username', usernameController, 'assets/images/male.png'),
+
                 const SizedBox(height: 16),
-                buildTextField('Password', passwordController, 'assets/images/pass.png'),
+
                 const SizedBox(height: 16),
-                buildTextField('Confirm Password', confirmPasswordController, 'assets/images/pass.png'),
+
                 const SizedBox(height: 16),
                 Container(
                   width: 280,
@@ -81,7 +55,9 @@ class _RegisterState extends State<Register> {
                       borderRadius: BorderRadius.circular(50)
                   ),
                   child: ElevatedButton(
-                    onPressed: registerUser,
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const Register()));
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0XFFFFBF69),
                       shape: RoundedRectangleBorder(
