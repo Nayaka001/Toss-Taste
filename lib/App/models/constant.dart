@@ -4,7 +4,9 @@ const loginURL = '$baseURL/login';
 const menuURL = '$baseURL/menu';
 const ingredientUrl = '$baseURL/ingredients-details';
 const hasilResep = '$baseURL/recipes-by-items';
-const addRecipes = '$baseURL/addrecipes';
+const addRecipes = '$baseURL/add-recipe';
+const search = '$baseURL/search-recipes';
+const getLogUser =  '$baseURL/user';
 
 //Error
 const serverError = 'Server Error';

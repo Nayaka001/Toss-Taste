@@ -42,12 +42,14 @@ class SubCategory {
 }
 
 class Item {
+  final int item_id;
   final String namaItem;
 
-  Item({required this.namaItem});
+  Item({required this.item_id, required this.namaItem});
 
   factory Item.fromJson(Map<String, dynamic> json) {
     return Item(
+      item_id: json['item_id'] ?? 0, // Pastikan `id` ada di JSON
       namaItem: json['nama_item'] ?? '',
     );
   }

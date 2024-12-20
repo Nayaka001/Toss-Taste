@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:jualan/App/Toss/hasil.dart';
 import 'package:jualan/App/login.dart';
@@ -7,6 +9,7 @@ import 'package:jualan/App/models/constant.dart';
 import 'package:jualan/App/models/recipes_service.dart';
 import 'package:jualan/App/models/users_service.dart';
 import 'package:jualan/App/navbar.dart';
+import 'package:http/http.dart' as http;
 
 class TossTaste extends StatefulWidget {
   const TossTaste({super.key});
@@ -19,17 +22,79 @@ class _TossTaste extends State<TossTaste> {
   final TextEditingController _searchController = TextEditingController();
   String _searchText = '';
   List<IngredientsCategory> _categories = []; // Menyimpan kategori
-  Map<String, bool> _expandedCategories = {}; // Menyimpan status expand/collapse kategori
   final Set<String> _selectedItems = {}; // Menyimpan item yang dipilih
 
   @override
   void initState() {
     super.initState();
-    ingredient(); // Memanggil menuPosts untuk mengambil data kategori saat pertama kali load
+    filterRecipes();
+    List<String> queries = _searchController.text.split(',').map((e) => e.trim()).toList();
+    searchRecipes(queries);
+  }
+  Future<List<Map<String, dynamic>>> searchRecipes(List<String> queries) async {
+    String token = await getToken();
+    // Menggunakan query parameters untuk GET request
+    final uri = Uri.parse(search).replace(queryParameters: {'queries': queries.join(',')});
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    // Debugging response
+    print("Response status: ${response.statusCode}");
+    print("Response body: ${response.body}");
+
+    if (response.statusCode == 200) {
+      List<dynamic> responseBody = json.decode(response.body);
+      return List<Map<String, dynamic>>.from(responseBody.map((item) => item as Map<String, dynamic>));
+    } else {
+      throw Exception('Failed to fetch recipes: ${response.statusCode}');
+    }
+  }
+  Future<void> fetchCategories() async {
+    try {
+      // Mendapatkan token (jika diperlukan untuk autentikasi)
+      String token = await getToken();
+
+      // Membuat permintaan GET ke API untuk mengambil kategori
+      final uri = Uri.parse(hasilResep); // Ganti dengan URL endpoint API Anda
+      final response = await http.get(
+        uri,
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token', // Tambahkan header Authorization jika diperlukan
+        },
+      );
+
+      // Debugging respons
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
+      // Cek status respons
+      if (response.statusCode == 200) {
+        // Decode respons JSON menjadi List<IngredientsCategory> atau struktur yang sesuai
+        List<dynamic> responseBody = json.decode(response.body);
+
+        // Ubah data respons menjadi struktur kategori yang diinginkan
+        setState(() {
+          _categories = responseBody.map((data) => IngredientsCategory.fromJson(data)).toList();
+        });
+      } else {
+        print("Error fetching categories: ${response.statusCode}");
+        print("Message: ${response.body}");
+      }
+    } catch (e) {
+      // Tangani exception yang terjadi
+      print("Exception during fetchCategories: $e");
+    }
   }
 
-  // Fungsi untuk mengambil data kategori dan subkategori
-  Future<void> ingredient() async {
+
+  Future<void> filterRecipes() async {
     try {
       ApiResponse response = await getIngredients();
 
@@ -76,6 +141,33 @@ class _TossTaste extends State<TossTaste> {
   // Fungsi untuk menyaring kategori, subkategori, dan item sesuai pencarian
   bool _isItemMatched(String namaItem) {
     return namaItem.toLowerCase().contains(_searchText.toLowerCase());
+  }
+  void hasilRecipes() {
+    List<Map<String, dynamic>> filteredRecipes = [];
+
+    for (var category in _categories) {
+      for (var subcategory in category.subcategories ?? []) {
+        for (var item in subcategory.items ?? []) {
+          if (_selectedItems.contains(item['item_name'].toLowerCase())) {
+            for (var recipe in item['recipeItems'] ?? []) {
+              filteredRecipes.add({
+                'item_name': item['item_name'],
+                'recipe_name': recipe['recipeName'],
+                'details': recipe['details'],
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // Navigasi ke halaman hasil
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HasilRecipt(filteredRecipes: filteredRecipes, filteredQueries: [],),
+      ),
+    );
   }
 
   @override
@@ -124,8 +216,37 @@ class _TossTaste extends State<TossTaste> {
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Row(
                             children: [
-                              const Icon(Icons.search, color: Colors.black54),
+                              IconButton(
+                                icon: const Icon(Icons.search, color: Colors.black54),
+                                onPressed: () async {
+                                  // Pastikan teks pencarian tidak kosong
+                                  if (_searchController.text.isEmpty) {
+                                    return; // Tidak melakukan pencarian jika teks kosong
+                                  }
+
+                                  // Pisahkan teks berdasarkan koma
+                                  final queries = _searchController.text.split(',').map((e) => e.trim()).toList();
+
+                                  // Panggil searchRecipes untuk mendapatkan hasil pencarian
+                                  try {
+                                    List<Map<String, dynamic>> results = await searchRecipes(queries);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => HasilRecipt(
+                                          filteredQueries: queries,
+                                          filteredRecipes: results, // Hasil pencarian
+                                        ),
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    print("Error during search nii: $e"); // Tambahkan pengecekan lebih lanjut
+                                  }
+                                },
+                              ),
+
                               const SizedBox(width: 8),
+                              // TextField untuk input pencarian
                               Expanded(
                                 child: TextField(
                                   controller: _searchController,
@@ -133,11 +254,6 @@ class _TossTaste extends State<TossTaste> {
                                     hintText: 'Pantry Essentials, vegetables, & more...',
                                     border: InputBorder.none,
                                   ),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _searchText = value;
-                                    });
-                                  },
                                 ),
                               ),
                             ],
@@ -220,34 +336,68 @@ class _TossTaste extends State<TossTaste> {
                           child: Center(
                             child: ElevatedButton(
                               onPressed: () {
+                                // Filter resep langsung menggunakan _categories
                                 List<Map<String, dynamic>> filteredRecipes = [];
-                                // Looping melalui kategori untuk menyaring item
+                                print("Selected Items: $_selectedItems");  // Debugging: Cek nilai _selectedItems
+
+                                // Loop untuk memfilter resep berdasarkan _selectedItems
                                 for (var category in _categories) {
+                                  print("Processing Category: ${category.categoryName}");  // Debugging: Cek kategori
                                   for (var subcategory in category.subcategories) {
+                                    print("Processing Subcategory: ${subcategory.subcategoryName}");  // Debugging: Cek subkategori
                                     for (var item in (subcategory.items ?? [])) {
-                                      // Cek apakah item dipilih
-                                      if (_selectedItems.contains(item.namaItem.toLowerCase())) {
-                                        // Ambil resep terkait dari recipeItems (pastikan item memiliki field recipeItems)
-                                        for (var recipe in item.recipeItems ?? []) {
-                                          filteredRecipes.add({
-                                            'item_name': item.namaItem, // Nama item
-                                            'recipe_name': recipe.recipeName, // Nama resep
-                                            'details': recipe.details, // Detail resep
-                                          });
+                                      print("Processing item: ${item.namaItem}");  // Debugging: Cek item yang sedang diproses
+
+                                      // Pastikan membandingkan nama item dengan pilihan yang sudah di-trim dan lowercased
+                                      bool isItemMatched = _selectedItems.any((selectedItem) =>
+                                      selectedItem.toLowerCase().trim() == item.namaItem.toLowerCase().trim());
+                                      print("Item match check: $isItemMatched");
+
+                                      if (isItemMatched) {
+                                        print("Item matched: ${item.namaItem}");
+                                        print("Item recipeItems: ${item.recipeItems}");  // Debugging: Cek recipeItems
+
+                                        // Pastikan recipeItems ada dan tidak kosong
+                                        if (item.recipeItems == null || item.recipeItems.isEmpty) {
+                                          print("No recipes available for ${item.namaItem}");
+                                        } else {
+                                          for (var recipe in item.recipeItems ?? []) {
+                                            // Debugging: Cek setiap resep yang ditambahkan ke filteredRecipes
+                                            print("Adding recipe: ${recipe.recipeName}");
+                                            filteredRecipes.add({
+                                              'item_name': item.namaItem,
+                                              'recipe_name': recipe.recipeName,
+                                              'details': recipe.details,
+                                            });
+                                          }
                                         }
                                       }
                                     }
                                   }
                                 }
 
-                                // Navigasi ke halaman hasil pencarian dengan mengirimkan filteredRecipes
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => HasilRecipt(filteredRecipes: filteredRecipes),
-                                  ),
-                                );
+                                // Debugging: Cek hasil filter resep
+                                print("Filtered Recipes: $filteredRecipes");
+
+                                // Jika ada resep yang cocok, lakukan navigasi
+                                if (filteredRecipes.isNotEmpty) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => HasilRecipt(
+                                        filteredRecipes: filteredRecipes,
+                                        filteredQueries: _selectedItems.toList(),
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  // Jika tidak ada resep yang ditemukan
+                                  print("No recipes found.");
+                                  // Bisa ditambahkan alert atau toast untuk memberi tahu pengguna tidak ada resep
+                                }
                               },
+
+
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF2EC4B6),
                                 shape: RoundedRectangleBorder(
@@ -260,17 +410,26 @@ class _TossTaste extends State<TossTaste> {
                                 children: [
                                   Text(
                                     'Total Bahan: ${_selectedItems.length}',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: Colors.black,
+                                    ),
                                   ),
                                   const Text(
                                     'View Recipe >',
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: Colors.black,
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
                           ),
-                        ),
+                        )
+
                     ],
                   ),
                 ),
