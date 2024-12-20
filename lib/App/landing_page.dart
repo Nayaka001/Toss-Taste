@@ -129,7 +129,7 @@ class Landing extends StatelessWidget{
             width: 200,
             height: 54,
             child: ElevatedButton(onPressed: (){
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const Login()));
+              Navigator.push(context, MaterialPageRoute(builder: (context) =>  Login()));
             },
               style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2EC4B6),
