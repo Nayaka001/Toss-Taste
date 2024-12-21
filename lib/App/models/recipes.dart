@@ -26,9 +26,10 @@ class Recipes {
       serve: json['serve'],
       description: json['description'],
       createdBy: json['created_by'],
-      image: json['image'], // Tambahkan `image` di sini
+      image: json['image'] ?? 'assets/images/imgayam.png', // Nilai default
     );
   }
+
 
   // Konversi ke JSON
   Map<String, dynamic> toJson() {

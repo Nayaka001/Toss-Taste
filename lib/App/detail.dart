@@ -1,226 +1,282 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:jualan/App/home_screen.dart';
+import 'package:jualan/App/login.dart';
+import 'package:jualan/App/models/category.dart';
+import 'package:jualan/App/models/constant.dart';
+import 'package:jualan/App/models/detail_recipe.dart';
+import 'package:jualan/App/models/review.dart';
+import 'package:jualan/App/models/saved_service.dart';
 import 'package:jualan/App/navbar.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class Detail extends StatefulWidget {
-  const Detail({super.key});
+  final int recipeId;
+
+  const Detail({super.key, required this.recipeId});
 
   @override
-  State<Detail> createState() => _DetailState();
+  _DetailState createState() => _DetailState();
 }
 
 class _DetailState extends State<Detail> {
-  final PageController _controller = PageController();
-  final List<String> imagePaths = [
-    'assets/images/gambardetail.png',
-    'assets/images/imgayam.png',
-    'assets/images/karbo.png'
-  ];
+  late Future<RecipeDetail> recipeDetail;
+
+  Future<RecipeDetail> fetchRecipeDetail(int recipeId) async {
+    final url = getRecipeURL(recipeId);
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return RecipeDetail.fromJson(data);
+    } else {
+      throw Exception('Failed to load recipe detail');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    recipeDetail = fetchRecipeDetail(widget.recipeId);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        margin: const EdgeInsets.only(left: 26, right: 26, top: 41),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                IconButton(
-                    onPressed: (){
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const BottomNavbar(currentIndex: 0,)));
-                    },
-                  icon: Image.asset('assets/images/close.png', width: 22.85, height: 22.85,),
-                ),
-                const SizedBox(width: 67,),
-                const Text('Detail', style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold
-                ),)
-              ],
-            ),
-            const SizedBox(height: 16,),
-            SizedBox(
-                height: 200,
-                child: PageView.builder(
-                  controller: _controller,
-                  itemCount: imagePaths.length,
-                  itemBuilder: (_, index) =>
-                      Container(
+      body: FutureBuilder<RecipeDetail>(
+        future: recipeDetail,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (snapshot.hasData) {
+            final recipe = snapshot.data!;
+
+            return SingleChildScrollView(
+              child: Container(
+                margin: const EdgeInsets.only(left: 26, right: 26, top: 41),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const BottomNavbar(
+                                  currentIndex: 0,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: Image.asset(
+                            'assets/images/close.png',
+                            width: 22.85,
+                            height: 22.85,
+                          ),
+                        ),
+                        const SizedBox(width: 67),
+                        const Text(
+                          'Detail',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 200,
+                      child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 10),
                         height: 200,
-                        child: Image.asset(imagePaths[index], fit: BoxFit.cover,),
-                      )
-                )
-
-            ),
-            const SizedBox(height: 15,),
-            Container(
-              alignment: Alignment.center,
-              child: SmoothPageIndicator(
-                  controller: _controller,
-                  count: imagePaths.length,
-                effect: const ExpandingDotsEffect(
-                  activeDotColor: Colors.black
-                ),
-              ),
-            ),
-            const SizedBox(height: 10,),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(
-                        color: Colors.black, // Warna border
-                        width: 1, // Lebar border
+                        child: Image.asset(
+                          'assets/images/${recipe.image}', // Gambar menggunakan data dari model
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
-                    width: 144,
-                    height: 28,
-                    child: ElevatedButton(onPressed: () {
-                      showModalFirst(context);
-                    },
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15), // Border radius tombol
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: Colors.black,
+                                width: 1,
+                              ),
                             ),
-                            padding: const EdgeInsets.only(left: 9, right: 8)
-                        ),
-                        child: const Text('Rate & Review',
+                            width: 144,
+                            height: 28,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                showModalFirst(context, widget.recipeId, recipe);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                padding: const EdgeInsets.only(left: 9, right: 8),
+                              ),
+                              child: const Text(
+                                'Rate & Review',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black,
-                                )
+                                ),
+                              ),
                             ),
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(
-                        color: Colors.black, // Warna border
-                        width: 1, // Lebar border
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: Colors.black,
+                                width: 1,
+                              ),
+                            ),
+                            width: 133,
+                            height: 28,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => Login(),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                padding: const EdgeInsets.only(left: 9, right: 8),
+                              ),
+                              child: const Text(
+                                'Report',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    width: 133,
-                    height: 28,
-                    child: ElevatedButton(onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const Detail()));
-                    },
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15), // Border radius tombol
-                            ),
-                            padding: const EdgeInsets.only(left: 9, right: 8)
-                        ),
-                        child: const Text('Report',
-                            style: TextStyle(
-                              fontSize: 16,
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            recipe.recipeName, // Nama resep dari model
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            )
-                        )
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10,),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Ayam Bawang', style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 48
-                    ),
-                  ),
-                  const SizedBox(height: 10,),
-                  Row(
-                    children: [
-                      SizedBox(
-                          width: 25,
-                          height: 25,
-                          child: Image.asset('assets/images/jam.png', fit: BoxFit.cover,)
-                      ),
-                      const SizedBox(width: 7,),
-                      const Text('15 min', style: TextStyle(
-                          fontSize: 16
-                      ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 9,),
-                  Row(
-                    children: [
-                      SizedBox(
-                          width: 25,
-                          height: 25,
-                          child: Image.asset('assets/images/harvest.png', fit: BoxFit.cover,)
-                      ),
-                      const SizedBox(width: 7,),
-                      const Text('5 ingredient(s)', style: TextStyle(
-                          fontSize: 16
-                      ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 9,),
-                  Row(
-                    children: [
-                      SizedBox(
-                          width: 25,
-                          height: 25,
-                          child: Image.asset('assets/images/serving.png', fit: BoxFit.cover,)
-                      ),
-                      const SizedBox(width: 7,),
-                      const Text('1 serve(s)', style: TextStyle(
-                          fontSize: 16
-                      ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 9,),
-                  Row(
-                    children: [
-                      SizedBox(
-                          width: 25,
-                          height: 25,
-                          child: Image.asset('assets/images/fav.png', fit: BoxFit.cover,)
-                      ),
-                      const SizedBox(width: 7,),
-                      const Text('4,3', style: TextStyle(
-                          fontSize: 16
-                      ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10,),
-                  const Text('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ultrices, est in lobortis aliquam, sem urna venenatis nulla, eget sodales tellus enim vitae ipsum. Cras volutpat vestibulum mattis. Nullam id elit dapibus, pellentesque dolor nec, accumsan sapien. In est enim bibendum id semper sit amet convallis sit amet ligula Maecenas blandit blandit mi. Nam maximus neque risus')
-                ],
-              ),
-            ),
+                              fontSize: 48,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: 25,
+                                height: 25,
+                                child: Image.asset(
+                                  'assets/images/jam.png',
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              const SizedBox(width: 7),
+                              Text(
+                                '${recipe.waktuPembuatan} min',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              const SizedBox(height: 9,),
 
-          ],
-        ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              SizedBox(
+                                  width: 25,
+                                  height: 25,
+                                  child: Image.asset('assets/images/harvest.png', fit: BoxFit.cover,)
+                              ),
+                              const SizedBox(width: 7,),
+                              Text('${recipe.totalItems} ingredient(s)', style: const TextStyle(
+                                  fontSize: 16
+                              ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 9,),
+                          Row(
+                            children: [
+                              SizedBox(
+                                  width: 25,
+                                  height: 25,
+                                  child: Image.asset('assets/images/serving.png', fit: BoxFit.cover,)
+                              ),
+                              const SizedBox(width: 7,),
+                              Text('${recipe.serve} serve(s)', style: const TextStyle(
+                                  fontSize: 16
+                              ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 9,),
+                          Row(
+                            children: [
+                              SizedBox(
+                                  width: 25,
+                                  height: 25,
+                                  child: Image.asset('assets/images/fav.png', fit: BoxFit.cover,)
+                              ),
+                              const SizedBox(width: 7,),
+                              Text(recipe.averageRating.toStringAsFixed(1), style: const TextStyle(
+                                  fontSize: 16
+                              ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10,),
+                          Text(recipe.description)
+                          // Tambahkan elemen UI lainnya menggunakan data dari model
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          } else {
+            return const Center(child: Text('No data available'));
+          }
+        },
       ),
     );
   }
 }
 
-void showModalFirst(BuildContext context) {
+
+void showModalFirst(BuildContext context, int recipeId, RecipeDetail recipe) {
   showModalBottomSheet(
     context: context,
     shape: RoundedRectangleBorder(
@@ -245,7 +301,6 @@ void showModalFirst(BuildContext context) {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Drag Indicator
                 Center(
                   child: Container(
                     width: 120,
@@ -257,7 +312,6 @@ void showModalFirst(BuildContext context) {
                   ),
                 ),
                 const SizedBox(height: 20),
-                // Average Rating
                 Row(
                   children: [
                     const Stack(
@@ -277,17 +331,17 @@ void showModalFirst(BuildContext context) {
                     ),
                     const SizedBox(width: 10),
                     RichText(
-                      text: const TextSpan(
-                        style: TextStyle(color: Colors.black),
+                      text: TextSpan(
+                        style: const TextStyle(color: Colors.black),
                         children: [
                           TextSpan(
-                            text: '4.5',
-                            style: TextStyle(
+                            text: recipe.averageRating.toStringAsFixed(1),
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 32,
                             ),
                           ),
-                          TextSpan(
+                          const TextSpan(
                             text: '/5',
                             style: TextStyle(fontSize: 20),
                           ),
@@ -297,24 +351,22 @@ void showModalFirst(BuildContext context) {
                   ],
                 ),
                 const SizedBox(height: 10),
-                // List of Reviews (Scrollable)
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
                       children: List.generate(
-                        10, // jumlah ulasan
-                        (index) => Padding(
+                        recipe.comments.length, // Menggunakan jumlah komentar dari recipe
+                            (index) => Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Profile Picture
                               Container(
                                 decoration: BoxDecoration(
-                                  shape: BoxShape.circle, // Bentuk bulat
+                                  shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: Colors.black, // Warna border
-                                    width: 1, // Ketebalan border
+                                    color: Colors.black,
+                                    width: 1,
                                   ),
                                 ),
                                 child: CircleAvatar(
@@ -326,15 +378,13 @@ void showModalFirst(BuildContext context) {
                                   ),
                                 ),
                               ),
-
                               const SizedBox(width: 10),
-                              // Review Content
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Amelia Panjaitan ${index + 1}',
+                                      recipe.comments[index].user.name, // Nama user
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
@@ -344,7 +394,7 @@ void showModalFirst(BuildContext context) {
                                     Row(
                                       children: List.generate(
                                         5,
-                                        (starIndex) => Padding(
+                                            (starIndex) => Padding(
                                           padding: const EdgeInsets.only(right: 4.0),
                                           child: Stack(
                                             alignment: Alignment.center,
@@ -352,14 +402,14 @@ void showModalFirst(BuildContext context) {
                                               Icon(
                                                 Icons.star,
                                                 size: 25,
-                                                color: starIndex < 4
+                                                color: starIndex < recipe.comments[index].rating
                                                     ? Colors.amber
-                                                    : Colors.grey[300], 
+                                                    : Colors.grey[300],
                                               ),
                                               const Icon(
                                                 Icons.star_outline,
                                                 size: 25,
-                                                color: Colors.black, 
+                                                color: Colors.black,
                                               ),
                                             ],
                                           ),
@@ -367,12 +417,10 @@ void showModalFirst(BuildContext context) {
                                       ),
                                     ),
                                     const SizedBox(height: 5),
-                                    const Text(
-                                      'Aku coba buatin nenek aku, katanya enak banget. Masakannya enak, namun sepertinya lebih baik jika takaran garamnya dibanyakin.',
-                                      style: TextStyle(fontSize: 16),
+                                    Text(
+                                      recipe.comments[index].comment, // Komentar pengguna
+                                      style: const TextStyle(fontSize: 16),
                                     ),
-                                    
-                                    // Rating Stars with Outline
                                   ],
                                 ),
                               ),
@@ -384,11 +432,10 @@ void showModalFirst(BuildContext context) {
                   ),
                 ),
                 const SizedBox(height: 20),
-                // Input Field
                 TextField(
                   onTap: () {
                     Navigator.pop(context); // Tutup modal pertama
-                    showModalSecond(context); // Buka modal kedua
+                    showModalSecond(context, recipeId); // Buka modal kedua
                   },
                   readOnly: true,
                   decoration: InputDecoration(
@@ -410,12 +457,15 @@ void showModalFirst(BuildContext context) {
 
 
 
-void showModalSecond(BuildContext context) { 
+
+
+void showModalSecond(BuildContext context, int recipeId) {
   int selectedRating = 0; // Menyimpan rating yang dipilih
+  TextEditingController commentController = TextEditingController();
 
   showModalBottomSheet(
     context: context,
-    isScrollControlled: true, // Agar modal bisa mengatur tinggi secara manual
+    isScrollControlled: true,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.only(
         topLeft: Radius.circular(30),
@@ -423,13 +473,12 @@ void showModalSecond(BuildContext context) {
       ),
     ),
     builder: (BuildContext context) {
-      // Menghitung tinggi 65% dari layar
       double height = MediaQuery.of(context).size.height * 0.55;
 
       return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState) {
           return Container(
-            height: height, // Mengatur tinggi modal menjadi 65% dari layar
+            height: height,
             child: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -446,7 +495,6 @@ void showModalSecond(BuildContext context) {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // Title Section
                     const Text(
                       'How Would You Rate',
                       textAlign: TextAlign.center,
@@ -457,7 +505,7 @@ void showModalSecond(BuildContext context) {
                     ),
                     const SizedBox(height: 10),
                     const Text(
-                      'Ayam Bawang',
+                      'Ayam Bawang', // Ganti dengan nama resep dinamis
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 18,
@@ -470,7 +518,7 @@ void showModalSecond(BuildContext context) {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(
                         5,
-                        (index) => GestureDetector(
+                            (index) => GestureDetector(
                           onTap: () {
                             setState(() {
                               selectedRating = index + 1; // Update rating
@@ -489,7 +537,7 @@ void showModalSecond(BuildContext context) {
                                 const Icon(
                                   Icons.star,
                                   color: Colors.amber,
-                                  size: 26, 
+                                  size: 26,
                                 ),
                             ],
                           ),
@@ -499,20 +547,21 @@ void showModalSecond(BuildContext context) {
                     const SizedBox(height: 20),
                     // Comment Section
                     TextField(
+                      controller: commentController,
                       maxLines: 8,
                       decoration: InputDecoration(
                         hintText: 'Leave a review',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(30),
                           borderSide: const BorderSide(
-                            color: Colors.black, 
+                            color: Colors.black,
                             width: 2.0,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(30),
                           borderSide: const BorderSide(
-                            color: Colors.black, 
+                            color: Colors.black,
                             width: 1.0,
                           ),
                         ),
@@ -530,27 +579,32 @@ void showModalSecond(BuildContext context) {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           // Handle submit action
-                          Navigator.pop(context); // Close modal
+                          await FavoritesService.submitReview(
+                            recipeId: recipeId, // Mengakses recipeId dari parameter
+                            rating: selectedRating,
+                            comment: commentController.text,
+                          );
+                          Navigator.pop(context); // Close modal setelah submit
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFBF69), 
+                          backgroundColor: const Color(0xFFFFBF69),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                             side: const BorderSide(
-                              color: Colors.black, 
-                              width: 1.0, 
+                              color: Colors.black,
+                              width: 1.0,
                             ),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 8), 
-                          minimumSize: Size(double.infinity, 30), 
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          minimumSize: Size(double.infinity, 30),
                         ),
                         child: const Text(
                           'SEND',
                           style: TextStyle(
                             fontSize: 16,
-                            color: Colors.black, 
+                            color: Colors.black,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -566,3 +620,5 @@ void showModalSecond(BuildContext context) {
     },
   );
 }
+
+

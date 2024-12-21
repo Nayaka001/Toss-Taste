@@ -7,6 +7,11 @@ const hasilResep = '$baseURL/recipes-by-items';
 const addRecipes = '$baseURL/add-recipe';
 const search = '$baseURL/search-recipes';
 const getLogUser =  '$baseURL/user';
+const saved =  '$baseURL/saved';
+const comments =  '$baseURL/comment';
+String getRecipeURL(int recipeId) {
+  return '$baseURL/recipes/$recipeId/recipes';
+}
 
 //Error
 const serverError = 'Server Error';

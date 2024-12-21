@@ -60,6 +60,8 @@ class _HasilReciptState extends State<HasilRecipt> {
                     children: _menuList.map((recipe) {
                       return RecipeCard(
                         recipeName: recipe['recipe_name'] ?? 'Recipe Name',
+                        recipeId: recipe['recipe_id'] ?? 0, // Gunakan nilai default 0
+                        waktu_pembuatan: recipe['waktu_pembuatan'] ?? 'Unknown',
                       );
                     }).toList(),
                   ),
@@ -85,10 +87,14 @@ class _HasilReciptState extends State<HasilRecipt> {
 
 class RecipeCard extends StatelessWidget {
   final String recipeName;
+  final int recipeId;
+  final String waktu_pembuatan;
 
-  const RecipeCard({
+  RecipeCard({
     Key? key,
     required this.recipeName,
+    required this.recipeId,
+    required this.waktu_pembuatan,
   }) : super(key: key);
 
   @override
@@ -109,43 +115,39 @@ class RecipeCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Gambar default
             Image.asset(
-              'assets/images/imgayam.png', // Gunakan gambar default
+              'assets/images/imgayam.png',
               width: 103,
               height: 69,
             ),
             const SizedBox(height: 7),
             Text(
-              recipeName, // Nama resep
+              recipeName,
               style: const TextStyle(fontSize: 12),
             ),
-            const Text(
-              '', // Tidak ada waktu pembuatan
-              style: TextStyle(fontSize: 12, color: Color(0xFF666666)),
+            Text(
+              waktu_pembuatan,
+              style: const TextStyle(fontSize: 12, color: Color(0xFF666666)),
             ),
             const SizedBox(height: 9),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                ActionButton(
-                  label: 'Baca',
-                  backgroundColor: const Color(0XFFBCFFC1),
+                ElevatedButton(
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const Detail()),
+                      MaterialPageRoute(
+                        builder: (context) => Detail(recipeId: recipeId),
+                      ),
                     );
                   },
+                  child: const Text('Baca'),
                 ),
-                ActionButton(
-                  label: 'Save',
-                  backgroundColor: const Color(0XFFFBFFBC),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const Register()),
-                    );
-                  },
+                ElevatedButton(
+                  onPressed: () {},
+                  child: const Text('Save'),
                 ),
               ],
             ),
@@ -155,6 +157,8 @@ class RecipeCard extends StatelessWidget {
     );
   }
 }
+
+
 class ActionButton extends StatelessWidget {
   final String label;
   final Color backgroundColor;
