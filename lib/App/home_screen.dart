@@ -6,6 +6,7 @@ import 'package:jualan/App/models/api_service.dart';
 import 'package:jualan/App/models/constant.dart';
 import 'package:jualan/App/models/recipes.dart';
 import 'package:jualan/App/models/recipes_service.dart';
+import 'package:jualan/App/models/saved_service.dart';
 import 'package:jualan/App/models/users_service.dart';
 import 'package:jualan/App/register.dart';
 
@@ -19,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> _menuList = [];
+
   bool _loading = true;
   int userId = 0;
 
@@ -118,80 +120,64 @@ class _HomeScreenState extends State<HomeScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  Image.asset(recipe.image ?? 'assets/images/imgayam.png', width: 103, height: 69,),
-                                  const SizedBox(height: 7,),
-                                   Text(
-                                    recipe.recipe_name ?? 'Resep',
+                                  recipe.image != null && recipe.image!.startsWith('http')
+                                      ? Image.network(recipe.image!, width: 103, height: 69, fit: BoxFit.cover)
+                                      : Image.asset('assets/images/imgayam.png', width: 103, height: 69, fit: BoxFit.cover),
+                                  const SizedBox(height: 7),
+                                  Text(
+                                    recipe.recipe_name,
                                     style: const TextStyle(
                                       fontSize: 12,
                                     ),
                                   ),
                                   Text(
-                                    recipe.waktu_pembuatan ?? '',
+                                    recipe.waktu_pembuatan,
                                     style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Color(0xFF666666)
-                                    ),
+                                        fontSize: 12, color: Color(0xFF666666)),
                                   ),
                                   const SizedBox(height: 9),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(15),
-                                          border: Border.all(
-                                            color: Colors.black, // Warna border
-                                            width: 1, // Lebar border
-                                          ),
-                                        ),
-                                        width: 50,
-                                        height: 24,
-                                        child: ElevatedButton(onPressed: () {
-                                          Navigator.push(context, MaterialPageRoute(builder: (context) => const Detail()));
-                                        },
-                                            style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(0XFFBCFFC1),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(15), // Border radius tombol
-                                                ),
-                                                padding: const EdgeInsets.only(left: 9, right: 8)
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(0XFFFBFFBC),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(15), // Border radius tombol
                                             ),
-                                            child: const Text('Baca',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.black,
-                                                )
-                                            )
+                                            padding: const EdgeInsets.only(left: 9, right: 8)
                                         ),
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => Detail(recipeId: recipe.recipeId),
+                                            ),
+                                          );
+                                        },
+                                        child: const Text('Baca'),
                                       ),
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(15),
-                                          border: Border.all(
-                                            color: Colors.black, // Warna border
-                                            width: 1, // Lebar border
-                                          ),
-                                        ),
-                                        width: 50,
-                                        height: 24,
-                                        child: ElevatedButton(onPressed: () {
-                                          Navigator.push(context, MaterialPageRoute(builder: (context) => const Register()));
-                                        },
-                                            style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(0XFFFBFFBC),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(15), // Border radius tombol
-                                                ),
-                                                padding: const EdgeInsets.only(left: 9, right: 8)
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(0XFFFBFFBC),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(15), // Border radius tombol
                                             ),
-                                            child: const Text('Save',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.black,
-                                                )
-                                            )
+                                            padding: const EdgeInsets.only(left: 9, right: 8)
                                         ),
+                                        onPressed: () async {
+                                          try {
+                                            await FavoritesService.addFavorite(recipe.recipeId);
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Recipe added to favorites!')),
+                                            );
+                                          } catch (e) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Failed to add favorite: $e')),
+                                            );
+                                          }
+                                        },
+                                        child: const Text('Save'),
                                       ),
                                     ],
                                   ),
@@ -200,6 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           );
                         }).toList(),
+
                       ),
                     ),
                   ),
