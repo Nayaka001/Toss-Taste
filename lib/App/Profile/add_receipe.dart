@@ -26,6 +26,7 @@ class _AddReceipe extends State<AddReceipe> {
   List<IngredientsCategory> _categories = [];
   List<int> _selectedItems = [];
   File? _selectedFile;
+  Duration _cookingDuration = Duration(hours: 0, minutes: 0);
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _timeController = TextEditingController();
@@ -395,17 +396,71 @@ class _AddReceipe extends State<AddReceipe> {
                   border: Border.all(color: Colors.black),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: TextField(
-                  controller: _timeController,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide.none,
+                child: InkWell(
+                  onTap: () async {
+                    // Menampilkan Bottom Sheet dengan CupertinoTimerPicker untuk memilih durasi
+                    Duration? selectedDuration = await showModalBottomSheet<Duration>(
+                      context: context,
+                      builder: (BuildContext context) {
+                        Duration tempDuration = _cookingDuration;
+                        return SizedBox(
+                          height: 250,
+                          child: Column(
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 10.0),
+                                child: Text(
+                                  'Pilih estimasi waktu memasak',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: CupertinoTimerPicker(
+                                  mode: CupertinoTimerPickerMode.hm,
+                                  initialTimerDuration: _cookingDuration,
+                                  onTimerDurationChanged: (Duration newDuration) {
+                                    tempDuration = newDuration;
+                                  },
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop(tempDuration);
+                                },
+                                child: const Text('Simpan'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+
+                    if (selectedDuration != null) {
+                      setState(() {
+                        _cookingDuration = selectedDuration;
+                        _timeController.text =
+                            '${_cookingDuration.inHours} jam ${_cookingDuration.inMinutes.remainder(60)} menit';
+                      });
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+                    child: Text(
+                      _timeController.text.isNotEmpty
+                          ? _timeController.text
+                          : 'Select Duration',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: _timeController.text.isNotEmpty ? Colors.black : Colors.grey,
+                      ),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10.0),
                   ),
                 ),
               ),
+
               const SizedBox(height: 10),
               const Text(
                 'Add serves amount',
