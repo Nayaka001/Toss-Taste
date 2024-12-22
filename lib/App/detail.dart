@@ -117,6 +117,34 @@ class _DetailState extends State<Detail> {
                                 width: 1,
                               ),
                             ),
+                            width: 45,
+                            height: 28,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                print('Liked!');
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                padding: EdgeInsets.zero,
+                              ),
+                              child: const Icon(
+                                Icons.thumb_up_alt_outlined,
+                                size: 25,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: Colors.black,
+                                width: 1,
+                              ),
+                            ),
                             width: 144,
                             height: 28,
                             child: ElevatedButton(
@@ -152,12 +180,7 @@ class _DetailState extends State<Detail> {
                             height: 28,
                             child: ElevatedButton(
                               onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => Login(),
-                                  ),
-                                );
+                                showReportModal(context); // Memanggil fungsi modal
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
@@ -621,4 +644,152 @@ void showModalSecond(BuildContext context, int recipeId) {
   );
 }
 
+void showReportModal(BuildContext context) {
+  String? selectedReason; // Variabel untuk menyimpan alasan yang dipilih
+  TextEditingController explanationController = TextEditingController();
 
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text(
+          'Report Resep',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        content: StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return SizedBox(
+              width: MediaQuery.of(context).size.width * 0.8, // Memperbesar modal
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 8.0),
+                      child: Text(
+                        'Pilih alasan pelaporan:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    // Radio Buttons
+                    Column(
+                      children: [
+                        RadioListTile<String>(
+                          title: const Text('Spam atau Iklan'),
+                          value: 'spam',
+                          groupValue: selectedReason,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedReason = value;
+                            });
+                          },
+                          activeColor: Colors.blue,
+                        ),
+                        RadioListTile<String>(
+                          title: const Text('Konten Tidak Pantas'),
+                          value: 'inappropriate',
+                          groupValue: selectedReason,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedReason = value;
+                            });
+                          },
+                          activeColor: Colors.blue,
+                        ),
+                        RadioListTile<String>(
+                          title: const Text('Melanggar Hak Cipta'),
+                          value: 'copyright',
+                          groupValue: selectedReason,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedReason = value;
+                            });
+                          },
+                          activeColor: Colors.blue,
+                        ),
+                        RadioListTile<String>(
+                          title: const Text('Informasi Tidak Akurat'),
+                          value: 'inaccurate',
+                          groupValue: selectedReason,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedReason = value;
+                            });
+                          },
+                          activeColor: Colors.blue,
+                        ),
+                        RadioListTile<String>(
+                          title: const Text('Resep Tidak Lengkap'),
+                          value: 'incomplete',
+                          groupValue: selectedReason,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedReason = value;
+                            });
+                          },
+                          activeColor: Colors.blue,
+                        ),
+                        RadioListTile<String>(
+                          title: const Text('Lainnya'),
+                          value: 'other',
+                          groupValue: selectedReason,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedReason = value;
+                            });
+                          },
+                          activeColor: Colors.blue,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 8.0),
+                      child: Text(
+                        'Explain This Report:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    TextField(
+                      controller: explanationController,
+                      maxLines: 5,
+                      decoration: const InputDecoration(
+                        hintText: 'Jelaskan masalah pada resep ini...',
+                        border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Menutup modal
+            },
+            child: const Text(
+              'Batal',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Logika untuk mengirim laporan
+              print('Alasan: $selectedReason');
+              print('Penjelasan: ${explanationController.text}');
+              Navigator.of(context).pop(); // Menutup modal setelah laporan dikirim
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Laporan berhasil dikirim')),
+              );
+            },
+            child: const Text('Kirim'),
+          ),
+        ],
+      );
+    },
+  );
+}
