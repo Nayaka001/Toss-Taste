@@ -1,105 +1,133 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:jualan/App/detail.dart';
+import 'package:jualan/App/models/favorite.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:jualan/App/models/recipes.dart';  // Import model Recipe
 
-class SavedScreen extends StatelessWidget {
-  const SavedScreen({super.key});
+class SavedScreen extends StatefulWidget {
+  @override
+  _SavedScreenState createState() => _SavedScreenState();
+}
+
+class _SavedScreenState extends State<SavedScreen> {
+  List<Favorite> favorites = []; // List untuk menyimpan data Favorite
+  int userId = 0; // ID pengguna yang diperoleh dari SharedPreferences
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserIdAndFavorites(); // Ambil user ID dan data favorites
+  }
+
+  /// Mendapatkan user ID dari SharedPreferences dan memuat data favorites
+  Future<void> fetchUserIdAndFavorites() async {
+    final id = await getUserId();
+    setState(() {
+      userId = id;
+    });
+    fetchFavorites();
+  }
+
+  /// Mendapatkan user ID dari SharedPreferences
+  Future<int> getUserId() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    final id = pref.getInt('user_id') ?? 0;
+    return id;
+  }
+
+  /// Mengambil data favorites dari API berdasarkan user ID
+  Future<void> fetchFavorites() async {
+    if (userId == 0) return; // Tidak memuat jika user ID tidak valid
+    final url = Uri.parse('http://10.0.2.2:8000/api/favorites/$userId');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        favorites = (data['data'] as List)
+            .map((item) {
+          final recipe = Recipes.fromJson(item['recipe']); // Mengambil data recipe
+          return Favorite.fromJson(item)..recipe = recipe; // Menambahkan recipe pada Favorite
+        })
+            .toList();
+      });
+    } else {
+      throw Exception('Failed to load favorites');
+    }
+  }
+
+  /// Menghapus data favorite berdasarkan ID
+  Future<void> removeFavorite(int favoriteId) async {
+    final url = Uri.parse('http://10.0.2.2:8000/api/favorites/delete/$favoriteId');
+    final response = await http.delete(url);
+
+    if (response.statusCode == 200) {
+      setState(() {
+        favorites.removeWhere((fav) => fav.favId == favoriteId);
+      });
+    } else {
+      throw Exception('Failed to delete favorite');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDF7F1), // Light beige background color
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFDF7F1),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text(
-          'Saved',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 35),
-        ),
-        centerTitle: true,
+        title: const Text('Saved'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(25.0),
-        child: GridView.builder(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2, // Two items per row
-            crossAxisSpacing: 10.0,
-            mainAxisSpacing: 10.0,
-            childAspectRatio: 150 / 190, // Aspect ratio for the cards
-          ),
-          itemCount: 9, // Number of items in the grid
-          itemBuilder: (context, index) {
-            return const SavedCard();
-          },
-        ),
-      ),
+      body: userId == 0
+          ? const Center(child: CircularProgressIndicator()) // Menunggu user ID
+          : ListView.builder(
+        itemCount: favorites.length,
+        itemBuilder: (context, index) {
+          final favorite = favorites[index]; // Objek Favorite
+          final recipe = favorite.recipe; // Objek Recipe dari Favorite
 
-    );
-  }
-}
-
-class SavedCard extends StatelessWidget {
-  const SavedCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 150, // Lebar kartu
-      height: 190, // Tinggi kartu
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.black, width: 1.5), // Border hitam untuk kartu
-        borderRadius: BorderRadius.circular(35.0),
-      ),
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(35.0),
-        ),
-        elevation: 2,
-        margin: EdgeInsets.zero, // Menghapus margin default pada kartu
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center, // Pusatkan kolom
-          children: [
-            const SizedBox(height: 8), // Jarak antara kartu dan gambar
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(35.0)),
-              child: Container(
-                width: 160, // Lebar gambar
-                height: 150, // Tinggi gambar yang diperbarui
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black, width: 1.5), // Border hitam untuk seluruh gambar
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(35.0)),
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/imgayam.png'),
-                    fit: BoxFit.cover,
+          return Card(
+            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    recipe.recipe_name,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(recipe.description),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => Detail(
+                                recipeId: recipe.recipeId,
+                              ),
+                            ),
+                          );
+                        },
+                        child: const Text('Baca'),
+                      ),
+                      IconButton(
+                        onPressed: () => removeFavorite(favorite.favId),
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 4), // Jarak antara gambar dan teks
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start, // Menyelaraskan teks ke kiri
-              children: [
-                Text(
-                  'Ayam Bawang',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18), // Ukuran font untuk nama
-                ),
-                Text(
-                  '20 mins',
-                  style: TextStyle(color: Colors.black, fontSize: 18), // Ukuran font untuk waktu
-                ),
-              ],
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 }
-
-
-
-

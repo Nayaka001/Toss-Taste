@@ -3,7 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:jualan/App/Profile/add_receipe.dart';
 import 'package:jualan/App/Profile/setting.dart';
 import 'package:jualan/App/detail.dart';
+import 'package:jualan/App/models/recipes.dart';
+import 'package:jualan/App/models/recipes_service.dart';
 import 'package:jualan/App/navbar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
+import '../models/api_service.dart';
 
 
 
@@ -22,9 +27,16 @@ class _ProfileState extends State<Profile>{
       halaman = pageIndex;
     });
   }
+
+  Future<int> getUserId() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    return pref.getInt('user_id') ?? 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     double widthScreen = MediaQuery.of(context).size.width;
+
     return Scaffold(
       body: Container(
         color: const Color(0xFFFDF7F1),
@@ -36,7 +48,7 @@ class _ProfileState extends State<Profile>{
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const SizedBox(width: 62,),
+                  const SizedBox(width: 62),
                   const Text(
                     'Profile',
                     style: TextStyle(
@@ -45,29 +57,32 @@ class _ProfileState extends State<Profile>{
                     ),
                   ),
                   IconButton(
-                      onPressed: (){
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const Setting()));
-                      },
-                      icon: Image.asset('assets/images/setting.png')
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const Setting()),
+                      );
+                    },
+                    icon: Image.asset('assets/images/setting.png'),
                   )
                 ],
               ),
-              const SizedBox(height: 12,),
+              const SizedBox(height: 12),
               const CircleAvatar(
                 radius: 75,
                 backgroundImage: AssetImage('assets/images/org.png'),
               ),
-              const SizedBox(height: 5,),
+              const SizedBox(height: 5),
               IntrinsicWidth(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7), // Spasi dalam
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                   decoration: BoxDecoration(
                     color: const Color(0xFF2EC4B6),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
                     'Muhammad Nayaka Putra',
-                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold), // Warna teks biar kontras
+                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -76,11 +91,8 @@ class _ProfileState extends State<Profile>{
                   margin: const EdgeInsets.only(left: 16, top: 15, right: 16, bottom: 65),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    border: Border.all(
-                      color: Colors.black,
-                      width: 1.0
-                    ),
-                    borderRadius: BorderRadius.circular(30.0)
+                    border: Border.all(color: Colors.black, width: 1.0),
+                    borderRadius: BorderRadius.circular(30.0),
                   ),
                   height: 520,
                   width: 330,
@@ -94,7 +106,8 @@ class _ProfileState extends State<Profile>{
                           children: [
                             Column(
                               children: [
-                                ElevatedButton(onPressed: () => _switchPage(0),
+                                ElevatedButton(
+                                  onPressed: () => _switchPage(0),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.white,
                                     foregroundColor: Colors.black,
@@ -102,22 +115,21 @@ class _ProfileState extends State<Profile>{
                                     elevation: 0,
                                     padding: const EdgeInsets.only(bottom: 7),
                                   ).copyWith(
-                                    overlayColor: WidgetStateProperty.all(Colors.transparent),
+                                    overlayColor: MaterialStateProperty.all(Colors.transparent),
                                   ),
                                   child: const Text(
-                                    'POST', style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16),
-                                    ),
+                                    'POST',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                  ),
                                 ),
                                 Container(
                                   height: 7,
                                   width: 57,
                                   decoration: BoxDecoration(
-                                      color: halaman == 0 ? Colors.black : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(100)
-                                    )
+                                    color: halaman == 0 ? Colors.black : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(100),
                                   ),
+                                ),
                               ],
                             ),
                             Column(
@@ -131,21 +143,20 @@ class _ProfileState extends State<Profile>{
                                     elevation: 0,
                                     padding: const EdgeInsets.only(bottom: 7),
                                   ).copyWith(
-                                    overlayColor: WidgetStateProperty.all(Colors.transparent),
+                                    overlayColor: MaterialStateProperty.all(Colors.transparent),
                                   ),
                                   child: const Text(
-                                    'REPLIES', style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16),
+                                    'REPLIES',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                   ),
                                 ),
                                 Container(
-                                    height: 7,
-                                    width: 57,
-                                    decoration: BoxDecoration(
-                                        color: halaman == 1 ? Colors.black : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(100)
-                                    )
+                                  height: 7,
+                                  width: 57,
+                                  decoration: BoxDecoration(
+                                    color: halaman == 1 ? Colors.black : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
                                 ),
                               ],
                             ),
@@ -153,7 +164,7 @@ class _ProfileState extends State<Profile>{
                         ),
                       ),
                       Container(
-                        margin: const EdgeInsets.only(left: 17,right: 17, bottom: 7),
+                        margin: const EdgeInsets.only(left: 17, right: 17, bottom: 7),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
@@ -161,49 +172,83 @@ class _ProfileState extends State<Profile>{
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                  color: const Color(0xFFFFBF69),
-                                  borderRadius: BorderRadius.circular(50),
-                                  border: Border.all(color: Colors.black)
+                                color: const Color(0xFFFFBF69),
+                                borderRadius: BorderRadius.circular(50),
+                                border: Border.all(color: Colors.black),
                               ),
                               child: IconButton(
-                                onPressed: (){
-                                  Navigator.push(context, MaterialPageRoute(builder: (context) => const AddReceipe()));
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const AddReceipe()),
+                                  );
                                 },
                                 icon: Image.asset('assets/images/add.png'),
                                 iconSize: 22,
                               ),
-                            )
+                            ),
                           ],
                         ),
                       ),
                       Expanded(
-                        child: Container(
-                          margin: const EdgeInsets.only(left: 17, right: 17),
-                          child: SingleChildScrollView(
-                            child: halaman == 0 ? _buildPostContent() : _buildRepliesContent(),
-                          ),
+                        child: FutureBuilder<int>(
+                          future: getUserId(), // Mendapatkan userId dari SharedPreferences
+                          builder: (context, userSnapshot) {
+                            if (userSnapshot.connectionState == ConnectionState.waiting) {
+                              return const Center(child: CircularProgressIndicator());
+                            } else if (userSnapshot.hasError) {
+                              return Center(child: Text('Error: ${userSnapshot.error}'));
+                            } else if (!userSnapshot.hasData || userSnapshot.data == 0) {
+                              return Center(child: Text('User ID not found'));
+                            } else {
+                              int userId = userSnapshot.data!; // Mendapatkan userId
+
+                              return FutureBuilder<ApiResponse>(
+                                future: getRecipesByUser(userId), // Panggil API dengan userId
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return const Center(child: CircularProgressIndicator());
+                                  } else if (snapshot.hasError) {
+                                    return Center(child: Text('Error: ${snapshot.error}'));
+                                  } else if (!snapshot.hasData || snapshot.data!.error != null) {
+                                    return Center(child: Text('Error: ${snapshot.data!.error}'));
+                                  } else {
+                                    // Pastikan snapshot.data!.data adalah List<dynamic>
+                                    List<Recipes> recipes = List<Recipes>.from(snapshot.data!.data as Iterable);
+                                    return SingleChildScrollView(
+                                      child: _buildPostContent(recipes),
+                                    );
+                                  }
+                                },
+                              );
+                            }
+                          },
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),
       ),
-
     );
-
   }
-  Widget _buildPostContent() {
+
+  Widget _buildPostContent(List<Recipes> recipes) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Column(
           mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Container(
+          children: recipes.map((recipe) {
+            // Menghitung waktu
+            final createdAt = recipe.createdAt; // Asumsikan createdAt ada di model Recipes
+            final difference = DateTime.now().difference(createdAt);
+            final duration = _formatDuration(difference);
+
+            return Container(
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.black, width: 1),
                 borderRadius: BorderRadius.circular(10.0),
@@ -213,271 +258,103 @@ class _ProfileState extends State<Profile>{
               padding: const EdgeInsets.symmetric(vertical: 9.0, horizontal: 8.0),
               child: Row(
                 children: [
-                  Image.asset('assets/images/ayam.png', width: 60, height: 60,),
-                  const SizedBox(width: 6,),
+                  Image.asset('assets/images/ayam.png', width: 60, height: 60),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            Text('Ayam Bawang Betawi', style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold),),
-                            SizedBox(width: 10,),
-                            Text('2w', style: TextStyle(fontSize: 16, color: Color(0xFFB4B4B4)),),
+                            Text(
+                              recipe.recipe_name,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              duration,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Color(0xFFB4B4B4),
+                              ),
+                            ),
                           ],
                         ),
-                        const Text('Bahan-bahan', style: TextStyle(color: Color(0XFF666666), fontSize: 13),),
+                        const Text(
+                          'Bahan-bahan',
+                          style: TextStyle(
+                            color: Color(0XFF666666),
+                            fontSize: 13,
+                          ),
+                        ),
                         Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('• 1 ekor ayam kampungs', style: TextStyle(color: Color(0XFF666666), fontSize: 13),),
-                            const SizedBox(width: 4,),
-                            TextButton(
+                            Text(
+                              '• ${_truncateText(recipe.description)}', // Batas deskripsi bahan hingga 15 karakter
+                              style: const TextStyle(
+                                color: Color(0XFF666666),
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0XFFFBFFBC),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15), // Border radius tombol
+                                ),
+                                padding: const EdgeInsets.only(left: 9, right: 8),
+                              ),
                               onPressed: () {
-                                showModalBottomSheet(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return SingleChildScrollView(
-                                      scrollDirection: Axis.vertical,
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          border: Border.all(width: 1, color: Colors.black),
-                                          color: Colors.white,
-                                          borderRadius: const BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30))
-                                        ),
-                                          padding: const EdgeInsets.only(top: 9.86, right: 14, left: 14),
-                                        width: MediaQuery.of(context).size.width,
-                                        height: 485,
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisAlignment: MainAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                const SizedBox(width: 25.0,),
-                                                Container(
-                                                  decoration: BoxDecoration(
-                                                    border: Border.all(width: 1),
-                                                    color: const Color(0XFFD9D9D9),
-                                                    borderRadius: BorderRadius.circular(50)
-                                                  ),
-                                                  width: (79.2 / MediaQuery.of(context).size.width) * MediaQuery.of(context).size.width,
-                                                  height: 8.55,
-                                                ),
-                                                GestureDetector(
-                                                  onTap: () {
-                                                    Navigator.of(context).pop();
-                                                  },
-                                                  child: Image.asset('assets/images/closeprof.png'),
-                                                )
-
-                                              ],
-                                            ),
-                                            const SizedBox(height: 17.59,),
-                                            const Center(
-                                                child: Text('Ayam Bawang Betawi', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),)
-                                            ),
-                                            const SizedBox(height: 20.0,),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Container(
-                                                  decoration: BoxDecoration(
-                                                    border: Border.all(width: 1, color: Colors.black),
-                                                    borderRadius: BorderRadius.circular(20)
-                                                  ),
-                                                  width: 100,
-                                                  height: 100,
-                                                  child: Image.asset('assets/images/ayamprof.png'),
-                                                ),
-                                                const SizedBox(width: 9,),
-                                                Container(
-                                                  decoration: BoxDecoration(
-                                                      border: Border.all(width: 1, color: Colors.black),
-                                                      borderRadius: BorderRadius.circular(20)
-                                                  ),
-                                                  width: 100,
-                                                  height: 100,
-                                                  child: Image.asset('assets/images/ayamprof.png'),
-                                                ),
-                                              ],
-                                            ),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 39),
-                                              child: const Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  SizedBox(height: 15,),
-                                                  Text('Bahan - Bahan'),
-                                                  SizedBox(height: 8),
-                                                  Text("• 1 ekor ayam kampung muda/ayam pejantan (potong kecil2)"),
-                                                  Text("• 6 siung bawang putih (haluskan)"),
-                                                  Text("• 1 ruas jahe (haluskan)"),
-                                                  Text("• 2 bonggol bawang putih (geprek, jangan dikupas kulitnya)"),
-                                                  Text("• 1 sdt kecap asin"),
-                                                  Text("• 1 sdt saus tiram"),
-                                                  Text("• Secukupnya garam"),
-                                                ],
-                                              ),
-                                            ),
-
-                                          ],
-                                        )
-                                      ),
-                                    );
-                                  },
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => Detail(
+                                      recipeId: recipe.recipeId, // Mengirimkan recipeId ke layar detail
+                                    ),
+                                  ),
                                 );
                               },
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: const Text(
-                                'More...',
-                                style: TextStyle(
-                                  color: Color(0XFF3CBCFF),
-                                  fontSize: 13,
-                                ),
-                              ),
-                            )
-
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 3,),
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black, width: 1),
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              width: 300,
-              height: 81,
-              padding: const EdgeInsets.symmetric(vertical: 9.0, horizontal: 8.0),
-              child: Row(
-                children: [
-                  Image.asset('assets/images/ayam.png', width: 60, height: 60,),
-                  const SizedBox(width: 6,),
-                  const Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Text('Ayam Bawang Betawi', style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold),),
-                            SizedBox(width: 10,),
-                            Text('2w', style: TextStyle(fontSize: 16, color: Color(0xFFB4B4B4)),),
+                              child: const Text('Baca'),
+                            ),
                           ],
                         ),
-                        Text('Bahan-bahan', style: TextStyle(color: Color(0XFF666666), fontSize: 13),),
-                        Row(
-                          children: [
-                            Text('• 1 ekor ayam kampung', style: TextStyle(color: Color(0XFF666666), fontSize: 13),),
-                            SizedBox(width: 4,),
-                            Text('More...', style: TextStyle(color: Color(0XFF3CBCFF), fontSize: 13),),
-                          ],
-                        )
                       ],
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 3,),
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black, width: 1),
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              width: 300,
-              height: 81,
-              padding: const EdgeInsets.symmetric(vertical: 9.0, horizontal: 8.0),
-              child: Row(
-                children: [
-                  Image.asset('assets/images/ayam.png', width: 60, height: 60,),
-                  const SizedBox(width: 6,),
-                  const Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Text('Ayam Bawang Betawi', style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold),),
-                            SizedBox(width: 10,),
-                            Text('2w', style: TextStyle(fontSize: 16, color: Color(0xFFB4B4B4)),),
-                          ],
-                        ),
-                        Text('Bahan-bahan', style: TextStyle(color: Color(0XFF666666), fontSize: 13),),
-                        Row(
-                          children: [
-                            Text('• 1 ekor ayam kampung', style: TextStyle(color: Color(0XFF666666), fontSize: 13),),
-                            SizedBox(width: 4,),
-                            Text('More...', style: TextStyle(color: Color(0XFF3CBCFF), fontSize: 13),),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 3,),
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black, width: 1),
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              width: 300,
-              height: 81,
-              padding: const EdgeInsets.symmetric(vertical: 9.0, horizontal: 8.0),
-              child: Row(
-                children: [
-                  Image.asset('assets/images/ayam.png', width: 60, height: 60,),
-                  const SizedBox(width: 6,),
-                  const Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Text('Ayam Bawang Betawi', style: TextStyle(fontSize: 16,fontWeight: FontWeight.bold),),
-                            SizedBox(width: 10,),
-                            Text('2w', style: TextStyle(fontSize: 16, color: Color(0xFFB4B4B4)),),
-                          ],
-                        ),
-                        Text('Bahan-bahan', style: TextStyle(color: Color(0XFF666666), fontSize: 13),),
-                        Row(
-                          children: [
-                            Text('• 1 ekor ayam kampung', style: TextStyle(color: Color(0XFF666666), fontSize: 13),),
-                            SizedBox(width: 4,),
-                            Text('More...', style: TextStyle(color: Color(0XFF3CBCFF), fontSize: 13),),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        )
-
+            );
+          }).toList(),
+        ),
       ],
     );
+  }
+
+  String _formatDuration(Duration duration) {
+    if (duration.inDays >= 7) {
+      int weeks = duration.inDays ~/ 7;
+      return '$weeks w'; // Menggunakan format minggu
+    } else if (duration.inDays > 0) {
+      return '${duration.inDays}d'; // Menggunakan format hari
+    } else if (duration.inHours > 0) {
+      return '${duration.inHours}h'; // Menggunakan format jam
+    } else {
+      return '${duration.inMinutes}m'; // Menggunakan format menit
+    }
+  }
+
+// Fungsi untuk memotong teks hingga 15 karakter
+  String _truncateText(String text) {
+    if (text.length > 15) {
+      return text.substring(0, 15) + '...'; // Memotong teks dan menambahkan "..."
+    }
+    return text;
   }
   Widget _buildRepliesContent() {
     return const Column(
