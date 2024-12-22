@@ -104,6 +104,62 @@ Future<ApiResponse> getIngredients() async {
   }
   return apiResponse;
 }
+Future<ApiResponse> getRecipesByUser(int userId) async {
+  ApiResponse apiResponse = ApiResponse();
+  try {
+    String token = await getToken(); // Fungsi untuk mengambil token
+    print("Token: $token");
+
+    // Menambahkan print untuk mengecek URL request
+    String url = await getRecipesUrl();
+    print("Request URL: $url");
+
+    final response = await http.get(
+      Uri.parse(url),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    print("Response body: ${response.body}");
+    var responseData = jsonDecode(response.body);
+    print("Response data: $responseData");
+
+    switch (response.statusCode) {
+      case 200:
+        if (responseData['data'] != null) {
+          List<Recipes> recipes = (responseData['data'] as List)
+              .map((recipeJson) => Recipes.fromJson(recipeJson))
+              .toList();
+
+          // Menyimpan data resep pada apiResponse
+          apiResponse.data = recipes;
+        } else {
+          apiResponse.error = 'Data not found in response';
+        }
+        break;
+      case 422:
+        final errors = responseData['errors'];
+        apiResponse.error = errors[errors.keys.elementAt(0)][0];
+        break;
+      case 403:
+        apiResponse.error = responseData['message'];
+        break;
+      default:
+        apiResponse.error = 'Something went wrong';
+        break;
+    }
+  } catch (e) {
+    apiResponse.error = 'Server error';
+    print("Error occurred: $e");
+  }
+  return apiResponse;
+}
+
+
+// Fungsi untuk mengambil token (misalnya dari shared preferences)
+
 Future<List<Recipes>> fetchRecipesByItems(List<String> selectedItems) async {
   try {
     String token = await getToken();

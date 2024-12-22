@@ -40,11 +40,11 @@ class _BottomNavbarState extends State<BottomNavbar>{
     // Set currentIndex to the passed value or default to 0
     currentIndex = widget.currentIndex;
   }
-  List screens = const[
-    HomeScreen(),
-    FavouritesScreen(),
+  List screens = [
+    const HomeScreen(),
+    const FavouritesScreen(),
     SavedScreen(),
-    Profile(),
+    const Profile(),
   ];
   @override
   Widget build(BuildContext context) {

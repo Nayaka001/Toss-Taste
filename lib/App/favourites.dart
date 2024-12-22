@@ -1,7 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class FavouritesScreen extends StatelessWidget {
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'models/constant.dart';
+
+class FavouritesScreen extends StatefulWidget {
   const FavouritesScreen({super.key});
+
+  @override
+  _FavouritesScreenState createState() => _FavouritesScreenState();
+}
+
+class _FavouritesScreenState extends State<FavouritesScreen> {
+  List<dynamic> favourites = []; // Menyimpan daftar favorit
+  int userId = 0; // Mendeklarasikan userId
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserId(); // Memuat userId saat screen dibuka
+  }
+
+  /// Mengambil userId dari SharedPreferences dan memanggil fetchFavourites
+  Future<void> fetchUserId() async {
+    final id = await getUserId();  // Ambil userId
+    setState(() {
+      userId = id;  // Simpan userId
+    });
+    fetchFavourites();  // Memanggil fetchFavourites setelah userId tersedia
+  }
+
+  /// Mendapatkan user ID dari SharedPreferences
+  Future<int> getUserId() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    return pref.getInt('user_id') ?? 0;  // Mengambil userId atau default 0
+  }
+
+  /// Mengambil data favorit dari API
+  Future<void> fetchFavourites() async {
+    if (userId == 0) return;
+
+    try {
+      final favUrl = await getFav(userId);
+      final response = await http.get(Uri.parse(favUrl));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print("Fetched favourites: $data");
+        setState(() {
+          favourites = data['data'] ?? []; // Simpan daftar favorit
+        });
+      } else {
+        throw Exception('Failed to load favourites');
+      }
+    } catch (e) {
+      print('Error fetching favourites: $e');
+      throw Exception('Failed to load favourites');
+    }
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -24,26 +85,42 @@ class FavouritesScreen extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(25.0),
-        child: GridView.builder(
+        child: favourites.isEmpty
+            ? const Center(child: CircularProgressIndicator()) // Menunggu data
+            : GridView.builder(
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2, // Two items per row
             crossAxisSpacing: 10.0,
             mainAxisSpacing: 10.0,
             childAspectRatio: 150 / 190, // Aspect ratio for the cards
           ),
-          itemCount: 9, // Number of items in the grid
           itemBuilder: (context, index) {
-            return const FavouritesCard();
+            final recipe = favourites[index]['recipes'];
+            final imageName = recipe['image']; // Nama file gambar dari API
+            final imagePath = 'assets/images/$imageName';
+            return FavouritesCard(
+              recipe_name: recipe['recipe_name'] ?? 'Unknown Recipe',
+              waktu_pembuatan: recipe['waktu_pembuatan'] ?? 'Unknown Time',
+                imageUrl: imagePath,
+            );
           },
         ),
       ),
-      
     );
   }
 }
 
 class FavouritesCard extends StatelessWidget {
-  const FavouritesCard({super.key});
+  final String recipe_name;
+  final String waktu_pembuatan;
+  final String imageUrl;
+
+  const FavouritesCard({
+    super.key,
+    required this.recipe_name,
+    required this.waktu_pembuatan,
+    required this.imageUrl,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -66,30 +143,28 @@ class FavouritesCard extends StatelessWidget {
             const SizedBox(height: 8), // Jarak antara kartu dan gambar
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(35.0)),
-              child: Container(
-                width: 160, // Lebar gambar
-                height: 150, // Tinggi gambar yang diperbarui
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black, width: 1.5), // Border hitam untuk seluruh gambar
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(35.0)),
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/imgayam.png'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
+              child: Image.asset(
+                imageUrl, // Path lokal gambar
+                width: 160,
+                height: 150,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.error); // Placeholder jika gambar tidak ditemukan
+                },
               ),
             ),
+
             const SizedBox(height: 4), // Jarak antara gambar dan teks
-            const Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start, // Menyelaraskan teks ke kiri
               children: [
                 Text(
-                  'Ayam Bawang',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18), // Ukuran font untuk nama
+                  recipe_name,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18), // Ukuran font untuk nama
                 ),
                 Text(
-                  '20 mins',
-                  style: TextStyle(color: Colors.black, fontSize: 18), // Ukuran font untuk waktu
+                  waktu_pembuatan,
+                  style: const TextStyle(color: Colors.black, fontSize: 18), // Ukuran font untuk waktu
                 ),
               ],
             ),
@@ -99,7 +174,3 @@ class FavouritesCard extends StatelessWidget {
     );
   }
 }
-
-
-
-

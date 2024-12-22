@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class Recipes {
   final int recipeId;
   final String recipe_name;
@@ -5,7 +7,8 @@ class Recipes {
   final int serve;
   final String description;
   final int createdBy;
-  final String? image; // Tambahkan atribut `image`
+  final String? image;
+  final DateTime createdAt;
 
   Recipes({
     required this.recipeId,
@@ -14,11 +17,29 @@ class Recipes {
     required this.serve,
     required this.description,
     required this.createdBy,
-    this.image, // Tambahkan atribut opsional
+    this.image,
+    required this.createdAt,
   });
 
   // Konversi dari JSON
   factory Recipes.fromJson(Map<String, dynamic> json) {
+    // Cek jika 'created_at' ada dan valid
+    String createdAtStr = json['created_at'] ?? '';
+    DateTime createdAtDate;
+
+    try {
+      // Coba konversi jika 'created_at' ada
+      if (createdAtStr.isNotEmpty) {
+        createdAtDate = DateFormat("yyyy-MM-dd HH:mm:ss").parse(createdAtStr);
+      } else {
+        // Jika tidak ada, gunakan DateTime default
+        createdAtDate = DateTime.now();
+      }
+    } catch (e) {
+      // Jika terjadi error parsing, tetapkan nilai default
+      createdAtDate = DateTime.now();
+    }
+
     return Recipes(
       recipeId: json['recipe_id'],
       recipe_name: json['recipe_name'],
@@ -26,10 +47,10 @@ class Recipes {
       serve: json['serve'],
       description: json['description'],
       createdBy: json['created_by'],
-      image: json['image'] ?? 'assets/images/imgayam.png', // Nilai default
+      image: json['image'] ?? 'assets/images/imgayam.png',
+      createdAt: createdAtDate, // Assign DateTime yang sudah dikonversi
     );
   }
-
 
   // Konversi ke JSON
   Map<String, dynamic> toJson() {
@@ -40,7 +61,8 @@ class Recipes {
       'serve': serve,
       'description': description,
       'created_by': createdBy,
-      'image': image, // Tambahkan `image` di sini
+      'image': image,
+      'created_at': DateFormat("yyyy-MM-dd HH:mm:ss").format(createdAt), // Mengonversi kembali ke format string
     };
   }
 }
