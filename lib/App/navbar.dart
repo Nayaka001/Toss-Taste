@@ -42,8 +42,8 @@ class _BottomNavbarState extends State<BottomNavbar>{
   }
   List screens = [
     const HomeScreen(),
+    const LikesScreen(),
     const FavouritesScreen(),
-    SavedScreen(),
     const Profile(),
   ];
   @override

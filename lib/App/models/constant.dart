@@ -14,6 +14,10 @@ Future<String> getFav(int recipeId) async {
   int? userId = await getUserId();
   return '$baseURL/favorites/$userId';
 }
+Future<String> getLike(int recipeId) async {
+  int? userId = await getUserId();
+  return '$baseURL/likes/$userId';
+}
 const comments =  '$baseURL/comment';
 Future<String> getRecipesUrl() async {
   int? userId = await getUserId(); // Menunggu hingga userId tersedia

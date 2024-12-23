@@ -9,6 +9,7 @@ import 'package:jualan/App/models/constant.dart';
 import 'package:jualan/App/models/detail_recipe.dart';
 import 'package:jualan/App/models/review.dart';
 import 'package:jualan/App/models/saved_service.dart';
+import 'package:jualan/App/models/users_service.dart';
 import 'package:jualan/App/navbar.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
@@ -22,6 +23,7 @@ class Detail extends StatefulWidget {
 }
 
 class _DetailState extends State<Detail> {
+
   late Future<RecipeDetail> recipeDetail;
 
   Future<RecipeDetail> fetchRecipeDetail(int recipeId) async {
@@ -36,6 +38,35 @@ class _DetailState extends State<Detail> {
     }
   }
 
+  Future<void> _likeRecipe() async {
+    final String apiUrl = 'http://10.0.2.2:8000/api/likes'; // Ganti dengan URL API Anda
+
+    try {
+      // Ambil user_id terlebih dahulu
+      int userId = await getUserId();
+
+      // Membuat data untuk dikirim
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'recipe_id': widget.recipeId,
+          'user_id': userId,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        print('Success: ${data['message']}');
+      } else {
+        print('Failed to like recipe');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
   @override
   void initState() {
     super.initState();
@@ -121,7 +152,7 @@ class _DetailState extends State<Detail> {
                             height: 28,
                             child: ElevatedButton(
                               onPressed: () {
-                                print('Liked!');
+                                _likeRecipe(); // Panggil fungsi untuk mengirim permintaan API
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,

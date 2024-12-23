@@ -112,72 +112,102 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               borderRadius: BorderRadius.circular(15.0),
                             ),
-                            height: 160,
+                            height: 180, // Tinggi sedikit diperbesar untuk konten
                             width: 120,
-                            child: Container(
-                              margin: const EdgeInsets.only(left: 9, top: 6, right: 8),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 9, top: 6, right: 8),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  recipe.image != null && recipe.image!.startsWith('http')
-                                      ? Image.network(recipe.image!, width: 103, height: 69, fit: BoxFit.cover)
-                                      : Image.asset('assets/images/imgayam.png', width: 103, height: 69, fit: BoxFit.cover),
+                                  // Gambar
+                                  recipe.image != null
+                                      ? Image.asset(
+                                    'assets/images/${recipe.image}',  // Ambil nama gambar dari database
+                                    width: 103,
+                                    height: 69,
+                                    fit: BoxFit.cover,
+                                  )
+                                      : Image.asset(
+                                    'assets/images/imgayam.png',
+                                    width: 103,
+                                    height: 69,
+                                    fit: BoxFit.cover,
+                                  ),
                                   const SizedBox(height: 7),
-                                  Text(
-                                    recipe.recipe_name,
-                                    style: const TextStyle(
-                                      fontSize: 12,
+
+                                  // Nama Resep
+                                  Flexible(
+                                    child: Text(
+                                      recipe.recipe_name,
+                                      style: const TextStyle(fontSize: 12),
+                                      overflow: TextOverflow.ellipsis, // Tambahkan untuk mencegah overflow teks
+                                      maxLines: 1,
                                     ),
                                   ),
-                                  Text(
-                                    recipe.waktu_pembuatan,
-                                    style: const TextStyle(
-                                        fontSize: 12, color: Color(0xFF666666)),
+
+                                  // Waktu Pembuatan
+                                  Flexible(
+                                    child: Text(
+                                      recipe.waktu_pembuatan,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF666666),
+                                      ),
+                                      overflow: TextOverflow.ellipsis, // Tambahkan untuk mencegah overflow teks
+                                      maxLines: 1,
+                                    ),
                                   ),
                                   const SizedBox(height: 9),
+
+                                  // Tombol Baca dan Save
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
+                                      Expanded(
+                                        child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
                                             backgroundColor: const Color(0XFFFBFFBC),
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(15), // Border radius tombol
+                                              borderRadius: BorderRadius.circular(15),
                                             ),
-                                            padding: const EdgeInsets.only(left: 9, right: 8)
+                                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                                          ),
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    Detail(recipeId: recipe.recipeId),
+                                              ),
+                                            );
+                                          },
+                                          child: const FittedBox(child: Text('Baca')),
                                         ),
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => Detail(recipeId: recipe.recipeId),
-                                            ),
-                                          );
-                                        },
-                                        child: const Text('Baca'),
                                       ),
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
+                                      const SizedBox(width: 5), // Spasi antar tombol
+                                      Expanded(
+                                        child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
                                             backgroundColor: const Color(0XFFFBFFBC),
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(15), // Border radius tombol
+                                              borderRadius: BorderRadius.circular(15),
                                             ),
-                                            padding: const EdgeInsets.only(left: 9, right: 8)
+                                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                                          ),
+                                          onPressed: () async {
+                                            try {
+                                              await FavoritesService.addFavorite(recipe.recipeId);
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text('Recipe added to favorites!')),
+                                              );
+                                            } catch (e) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text('Failed to add favorite: $e')),
+                                              );
+                                            }
+                                          },
+                                          child: const FittedBox(child: Text('Save')),
                                         ),
-                                        onPressed: () async {
-                                          try {
-                                            await FavoritesService.addFavorite(recipe.recipeId);
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text('Recipe added to favorites!')),
-                                            );
-                                          } catch (e) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text('Failed to add favorite: $e')),
-                                            );
-                                          }
-                                        },
-                                        child: const Text('Save'),
                                       ),
                                     ],
                                   ),
@@ -185,6 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                           );
+
                         }).toList(),
 
                       ),

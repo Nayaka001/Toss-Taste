@@ -90,7 +90,7 @@ class RecipeCard extends StatelessWidget {
   final int recipeId;
   final String waktu_pembuatan;
 
-  RecipeCard({
+  const RecipeCard({
     Key? key,
     required this.recipeName,
     required this.recipeId,
@@ -110,31 +110,47 @@ class RecipeCard extends StatelessWidget {
       ),
       height: 160,
       width: 120,
-      child: Container(
-        margin: const EdgeInsets.only(left: 9, top: 6, right: 8),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 9, top: 6, right: 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Gambar default
             Image.asset(
               'assets/images/imgayam.png',
-              width: 103,
+              width: double.infinity,
               height: 69,
+              fit: BoxFit.cover,
             ),
             const SizedBox(height: 7),
+
+            // Nama resep
             Text(
               recipeName,
               style: const TextStyle(fontSize: 12),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis, // Menghindari overflow
             ),
+
+            // Waktu pembuatan
             Text(
               waktu_pembuatan,
-              style: const TextStyle(fontSize: 12, color: Color(0xFF666666)),
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF666666),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis, // Menghindari overflow
             ),
             const SizedBox(height: 9),
+
+            // Tombol aksi
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                ElevatedButton(
+                ActionButton(
+                  label: 'Baca',
+                  backgroundColor: Colors.yellow,
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -143,11 +159,13 @@ class RecipeCard extends StatelessWidget {
                       ),
                     );
                   },
-                  child: const Text('Baca'),
                 ),
-                ElevatedButton(
-                  onPressed: () {},
-                  child: const Text('Save'),
+                ActionButton(
+                  label: 'Save',
+                  backgroundColor: Colors.yellow,
+                  onPressed: () {
+                    // Aksi untuk menyimpan
+                  },
                 ),
               ],
             ),
@@ -157,7 +175,6 @@ class RecipeCard extends StatelessWidget {
     );
   }
 }
-
 
 class ActionButton extends StatelessWidget {
   final String label;
@@ -173,14 +190,7 @@ class ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: Colors.black,
-          width: 1,
-        ),
-      ),
+    return SizedBox(
       width: 50,
       height: 24,
       child: ElevatedButton(
@@ -190,7 +200,7 @@ class ActionButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          padding: const EdgeInsets.only(left: 9, right: 8),
+          padding: EdgeInsets.zero, // Menghilangkan padding default
         ),
         child: Text(
           label,
@@ -199,7 +209,9 @@ class ActionButton extends StatelessWidget {
       ),
     );
   }
-}// //hasil dari filter
+}
+
+// //hasil dari filter
 // Container(
 //   margin: const EdgeInsets.only(left: 19.96),
 //   child: SingleChildScrollView(

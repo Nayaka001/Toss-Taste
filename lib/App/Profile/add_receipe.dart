@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:jualan/App/Profile/profile.dart';
 import 'package:jualan/App/login.dart';
 import 'package:jualan/App/models/api_service.dart';
 import 'package:jualan/App/models/constant.dart';
@@ -12,7 +13,7 @@ import 'package:jualan/App/models/users_service.dart';
 import 'package:jualan/App/navbar.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:permission_handler/permission_handler.dart';
 import '../models/category.dart';
 
 
@@ -36,22 +37,48 @@ class _AddReceipe extends State<AddReceipe> {
     return pref.getInt('user_id'); // Ambil user_id yang sudah disimpan saat login
   }
 
-  // Future<void> _pickFile() async {
-  //   FilePickerResult? result = await FilePicker.platform.pickFiles();
-  //
-  //   if (result != null && result.files.single.path != null) {
-  //     setState(() {
-  //       _selectedFile = File(result.files.single.path!); // Simpan file terpilih
-  //     });
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('File yang dipilih: ${result.files.single.name}')),
-  //     );
-  //   } else {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Tidak ada file yang dipilih')),
-  //     );
-  //   }
-  // }
+  Future<void> _pickImage() async {
+    if (await Permission.storage.request().isGranted) {
+      try {
+        FilePickerResult? result = await FilePicker.platform.pickFiles(
+          type: FileType.image,
+          allowedExtensions: ['jpg', 'jpeg', 'png'],
+        );
+
+        if (result != null && result.files.single.path != null) {
+          setState(() {
+            _selectedFile = File(result.files.single.path!);
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('File yang dipilih: ${result.files.single.name}')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tidak ada file yang dipilih')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } else {
+      if (await Permission.storage.isPermanentlyDenied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Buka pengaturan untuk memberikan izin')),
+        );
+        openAppSettings();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Storage permission is required')),
+        );
+      }
+    }
+  }
+
+
+
 
   Future<void> filterRecipes() async {
     try {
@@ -82,86 +109,96 @@ class _AddReceipe extends State<AddReceipe> {
     }
   }
   Future<void> _submitForm() async {
+    // Validasi Input
     if (_titleController.text.isEmpty || _descriptionController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Recipe name and description cannot be empty')),
-      );
+      _showSnackbar('Recipe name and description cannot be empty');
       return;
     }
-
-    // Validasi apakah ada item yang dipilih
+    // Hilangkan verifikasi file
+    // if (_selectedFile == null) {
+    //   _showSnackbar('Please select a file first');
+    //   return;
+    // }
     if (_selectedItems.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one item')),
-      );
+      _showSnackbar('Please select at least one item');
       return;
     }
 
+    // Ambil Token
     String token = await getToken();
-    print("Token: $token");
-
     if (token.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Token is missing or invalid')),
-      );
+      _showSnackbar('Token is missing or invalid');
       return;
     }
 
+    // Ambil User ID
     int? userId = await getUserId();
     if (userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to get user information')),
-      );
+      _showSnackbar('Failed to get user information');
       return;
     }
 
+    // URL untuk mengirim data
     final url = Uri.parse(addRecipes);
-    final request = http.MultipartRequest('POST', url);
 
-    // Konversi _selectedItems menjadi array langsung
-    final itemsJson = _selectedItems.map((item) => item is int ? item : int.tryParse(item.toString()) ?? 0).toList();
-    print('Items JSON: $itemsJson');
+    // Membuat Request Multipart
+    final request = http.MultipartRequest('POST', url)
+      ..fields['recipe_name'] = _titleController.text
+      ..fields['description'] = _descriptionController.text
+      ..fields['waktu_pembuatan'] =
+          '${_cookingDuration.inHours}:${_cookingDuration.inMinutes.remainder(60)}'
+      ..fields['serve'] = _servesController.text
+      ..fields['created_by'] = userId.toString()
+      ..headers['Authorization'] = 'Bearer $token'
+      ..headers['Accept'] = 'application/json';
 
-    // Iterasi untuk mengisi items secara terpisah
-    for (int i = 0; i < itemsJson.length; i++) {
-      request.fields['items[$i]'] = itemsJson[i].toString();
-    }
-
-    request.fields['recipe_name'] = _titleController.text;
-    request.fields['description'] = _descriptionController.text;
-    request.fields['waktu_pembuatan'] = _timeController.text;
-    request.fields['serve'] = _servesController.text;
-    request.fields['created_by'] = userId.toString();
-
-    request.headers['Authorization'] = 'Bearer $token';
-    request.headers['Accept'] = 'application/json';
-
-    // Tambahkan file jika ada
+    // Tambahkan File Gambar jika Ada
     if (_selectedFile != null) {
-      request.files.add(await http.MultipartFile.fromPath('image', _selectedFile!.path));
+      String fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+      request.files.add(await http.MultipartFile.fromPath(
+        'image',
+        _selectedFile!.path,
+        filename: fileName,
+      ));
     }
 
+    // Tambahkan Items
+    for (int i = 0; i < _selectedItems.length; i++) {
+      final item = _selectedItems[i];
+      request.fields['items[$i]'] = item.toString();
+    }
+
+    // Kirim Request
     try {
       final response = await request.send();
-
       final responseStream = await response.stream.bytesToString();
-      print('Response: ${response.statusCode} - $responseStream');
 
       if (response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Recipe added successfully')),
+        _showSnackbar('Recipe added successfully');
+        // Navigasi ke halaman lain atau reset form
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) =>  const BottomNavbar(currentIndex: 3,)),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to add recipe')),
-        );
+        print('Response: ${response.statusCode} - $responseStream');
+        _showSnackbar('Failed to add recipe');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      _showSnackbar('Error: $e');
     }
   }
+
+
+
+// Helper untuk Menampilkan Snackbar
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+
 
 
 
@@ -525,10 +562,10 @@ class _AddReceipe extends State<AddReceipe> {
                 height: 25,
                 child: ElevatedButton(
                   style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.all(const Color(0xFFCBF3F0)),
-                    padding: WidgetStateProperty.all(EdgeInsets.zero),
+                    backgroundColor: MaterialStateProperty.all(const Color(0xFFCBF3F0)),
+                    padding: MaterialStateProperty.all(EdgeInsets.zero),
                   ),
-                  onPressed: (){},
+                  onPressed: _pickImage,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -546,7 +583,15 @@ class _AddReceipe extends State<AddReceipe> {
                   ),
                 ),
               ),
-              const SizedBox(height: 10,),
+              const SizedBox(height: 10),
+              _selectedFile != null
+                  ? Image.file(
+                _selectedFile!,
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+              )
+                  : const Text('No image selected'),
               Container(
                 width: MediaQuery.of(context).size.width,
                 height: 34,
@@ -557,17 +602,20 @@ class _AddReceipe extends State<AddReceipe> {
                 ),
                 child: ElevatedButton(
                   style: ButtonStyle(
-                    padding: WidgetStateProperty.all(EdgeInsets.zero),
-                    backgroundColor: WidgetStateProperty.all(const Color(0XFFFFBF69)),
-                    minimumSize: WidgetStateProperty.all(Size(MediaQuery.of(context).size.width, 34)),
+                    padding: MaterialStateProperty.all(EdgeInsets.zero),
+                    backgroundColor: MaterialStateProperty.all(const Color(0XFFFFBF69)),
+                    minimumSize: MaterialStateProperty.all(
+                        Size(MediaQuery.of(context).size.width, 34)),
                   ),
                   onPressed: _submitForm,
                   child: const Text(
                     'POST',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24, color: Colors.black),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 24, color: Colors.black),
                   ),
                 ),
               )
+
             ],
           ),
         ),
