@@ -270,72 +270,149 @@ class _ProfileState extends State<Profile>{
                           children: [
                             Text(
                               recipe.recipe_name,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
-                            const SizedBox(width: 10),
+                            SizedBox(width: 10),
                             Text(
                               duration,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Color(0xFFB4B4B4),
-                              ),
+                              style: TextStyle(fontSize: 16, color: Color(0xFFB4B4B4)),
                             ),
                           ],
                         ),
                         const Text(
                           'Bahan-bahan',
-                          style: TextStyle(
-                            color: Color(0XFF666666),
-                            fontSize: 13,
-                          ),
+                          style: TextStyle(color: Color(0XFF666666), fontSize: 13),
                         ),
                         Row(
                           children: [
                             Text(
                               '• ${_truncateText(recipe.description)}', // Batas deskripsi bahan hingga 15 karakter
-                              style: const TextStyle(
-                                color: Color(0XFF666666),
-                                fontSize: 13,
-                              ),
+                              style: TextStyle(color: Color(0XFF666666), fontSize: 13),
                             ),
                             const SizedBox(width: 4),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0XFFFBFFBC),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15), // Border radius tombol
-                                ),
-                                padding: const EdgeInsets.only(left: 9, right: 8),
-                              ),
+                            TextButton(
                               onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => Detail(
-                                      recipeId: recipe.recipeId, // Mengirimkan recipeId ke layar detail
-                                    ),
-                                  ),
+                                showModalBottomSheet(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return SingleChildScrollView(
+                                      scrollDirection: Axis.vertical,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          border: Border.all(width: 1, color: Colors.black),
+                                          color: Colors.white,
+                                          borderRadius: const BorderRadius.only(
+                                            topLeft: Radius.circular(30),
+                                            topRight: Radius.circular(30),
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.only(top: 9.86, right: 14, left: 14),
+                                        width: MediaQuery.of(context).size.width,
+                                        height: 485,
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                const SizedBox(width: 25.0),
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                    border: Border.all(width: 1),
+                                                    color: const Color(0XFFD9D9D9),
+                                                    borderRadius: BorderRadius.circular(50),
+                                                  ),
+                                                  width: (79.2 / MediaQuery.of(context).size.width) *
+                                                      MediaQuery.of(context).size.width,
+                                                  height: 8.55,
+                                                ),
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  child: Image.asset('assets/images/closeprof.png'),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 17.59),
+                                            Center(
+                                              child: Text(
+                                                recipe.recipe_name,
+                                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 20.0),
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                    border: Border.all(width: 1, color: Colors.black),
+                                                    borderRadius: BorderRadius.circular(20),
+                                                  ),
+                                                  width: 100,
+                                                  height: 100,
+                                                  child: Image.asset(
+                                                    'assets/images/${recipe.image}.png',
+                                                    errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                                                      return Image.asset('assets/images/ayam.png'); // Gambar default
+                                                    },
+                                                  ),
+
+                                                ),
+                                              ],
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 39),
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  const SizedBox(height: 15),
+                                                  const Text('Bahan - Bahan'),
+                                                  const SizedBox(height: 8),
+                                                  Text(recipe.description),  // Menampilkan deskripsi dinamis
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 );
                               },
-                              child: const Text('Baca'),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: const Text(
+                                'More...',
+                                style: TextStyle(
+                                  color: Color(0XFF3CBCFF),
+                                  fontSize: 13,
+                                ),
+                              ),
                             ),
+
                           ],
                         ),
                       ],
+
                     ),
+
                   ),
                 ],
               ),
             );
           }).toList(),
         ),
+        const SizedBox(height: 6,),
       ],
     );
-  }
 
+  }
   String _formatDuration(Duration duration) {
     if (duration.inDays >= 7) {
       int weeks = duration.inDays ~/ 7;
